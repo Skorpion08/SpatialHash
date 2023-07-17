@@ -1,1 +1,0 @@
-C:\Users\konra\source\repos\SpatialHash\x64\Debug\SpatialHash.exe
