@@ -35,19 +35,10 @@ Texture* TextureManager::Load(const std::string& filepath)
 
 void TextureManager::UnLoad(const std::string& filepath)
 {
-	std::unordered_map<std::string, Texture*>::iterator foundTexture = loadedTextures.find(filepath);
-
-	if (foundTexture == loadedTextures.end())
-	{
-		printf("Tried to unload invalid texture! From path %s", filepath.c_str());
-		return;
-	}
-	
-	// unneccessary because of raii
-	//foundTexture->second.Destroy();
-	// sex
 	delete loadedTextures[filepath];
+	
 	loadedTextures.erase(filepath);
+	// it returns a size_t so we may log if none was deleted
 }
 
 void TextureManager::UnLoadAll()
