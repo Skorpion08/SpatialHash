@@ -12,14 +12,7 @@ public:
 	Texture(SDL_Renderer* _renderer, const std::string& filepath);
 	virtual ~Texture();
 
-	Texture(Texture const&)
-	{
-		printf("copied\n");
-	}
-	Texture& operator=(Texture const&)
-	{
-		printf("copied\n");
-	}
+	void Render(const SDL_Rect* srcRect, const SDL_Rect* dstRect);
 
 	void SetRenderer(SDL_Renderer* _renderer);
 
@@ -30,6 +23,9 @@ public:
 	// some methods
 
 	SDL_Texture* Get() const { return  _texture; }
+
+	int GetWidth() const { return width; }
+	int GetHeight() const { return height; }
 
 private:
 	SDL_Texture* _texture;
@@ -42,6 +38,7 @@ private:
 
 class TextureManager
 {
+	TextureManager();
 public:
 	// Prevent copying
 	TextureManager(TextureManager const&) = delete;
@@ -59,7 +56,7 @@ private:
 	// It's a way to store currently loaded textures
 	// Key: filepath
 	// Value: texture
-	static std::unordered_map<std::string, Texture*> loadedTextures;
+	static std::unordered_map<std::string, Texture*> textures;
 
 	static SDL_Renderer* renderer;
 

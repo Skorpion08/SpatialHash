@@ -78,13 +78,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\SDL2\SDL2_image-2.6.3\include;C:\SDL2\SDL2-2.26.3\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\SDL2\SDL2_image-2.6.3\lib\x64;C:\SDL2\SDL2-2.26.3\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\SDL2\SDL2_image-2.6.3\include;C:\SDL2\SDL2-2.26.3\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\SDL2\SDL2_image-2.6.3\lib\x64;C:\SDL2\SDL2-2.26.3\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -120,11 +116,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\SDL2\SDL2-2.26.3\include;$(SolutionDir)Dependencies\SDL2\SDL2_image-2.6.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\SDL2\SDL2-2.26.3\lib\x64;$(SolutionDir)Dependencies\SDL2\SDL2_image-2.6.3\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -135,6 +134,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\SDL2\SDL2-2.26.3\include;$(SolutionDir)Dependencies\SDL2\SDL2_image-2.6.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,20 +143,31 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\SDL2\SDL2-2.26.3\lib\x64;$(SolutionDir)Dependencies\SDL2\SDL2_image-2.6.3\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Application.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="SpatialHashMap.cpp" />
-    <ClCompile Include="TextureManager.cpp" />
-    <ClCompile Include="Window.cpp" />
+    <ClCompile Include="Source\Application.cpp" />
+    <ClCompile Include="Source\EntityManager.cpp" />
+    <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\SpatialHashMap.cpp" />
+    <ClCompile Include="Source\TextureManager.cpp" />
+    <ClCompile Include="Source\Vector.cpp" />
+    <ClCompile Include="Source\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Application.h" />
-    <ClInclude Include="SpatialHashMap.h" />
-    <ClInclude Include="TextureManager.h" />
-    <ClInclude Include="Window.h" />
+    <ClInclude Include="Source\OBB.h" />
+    <ClInclude Include="Source\Vector.h" />
+    <ClInclude Include="Source\Application.h" />
+    <ClInclude Include="Source\EntityManager.h" />
+    <ClInclude Include="Source\SpatialHashMap.h" />
+    <ClInclude Include="Source\TextureManager.h" />
+    <ClInclude Include="Source\Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitattributes" />
+    <None Include=".gitignore" />
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

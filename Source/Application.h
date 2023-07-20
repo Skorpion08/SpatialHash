@@ -7,6 +7,7 @@
 
 #include "Window.h"
 #include "TextureManager.h"
+#include "EntityManager.h"
 
 class Application
 {
@@ -30,4 +31,13 @@ private:
 	SDL_Renderer* renderer;
 	Texture* texture1;
 	Texture* texture2;
+
+	double deltaTime;
+
+	// ecs stuff
+	EntityManager& entityManager = EntityManager::GetInstance();
+
+	SpriteSystem spritesSystem;
+	TransformSystem transformSystem;
+	CollisionSystem collisionSystem;
 };

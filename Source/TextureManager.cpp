@@ -4,7 +4,7 @@
 
 
 // Static members
-std::unordered_map<std::string, Texture*> TextureManager::loadedTextures;
+std::unordered_map<std::string, Texture*> TextureManager::textures;
 SDL_Renderer* TextureManager::renderer;
 
 void TextureManager::Init(SDL_Renderer* _renderer)
@@ -15,35 +15,35 @@ void TextureManager::Init(SDL_Renderer* _renderer)
 Texture* TextureManager::Load(const std::string& filepath)
 {
 	// If the texture actually exists then we can return it
-	if (loadedTextures[filepath] != nullptr)
+	if (textures[filepath] != nullptr)
 	{
-		return loadedTextures[filepath];
+		return textures[filepath];
 	}
 
-	//loadedTextures.emplace(filepath, Texture(renderer, filepath));
-	loadedTextures[filepath] = new Texture(renderer, filepath);
+	//textures.emplace(filepath, Texture(renderer, filepath));
+	textures[filepath] = new Texture(renderer, filepath);
 
-	if (loadedTextures[filepath]->Get() == nullptr)
+	if (textures[filepath]->Get() == nullptr)
 	{
-		printf("Texture manager failed to load texture from: %s! SDL_image Error: %s\n", filepath.c_str(), IMG_GetError());
+		printf("\tFrom: %s! SDL_image Error: %s\n", filepath.c_str(), IMG_GetError());
 		// remove the texture as it is already nullptr
-		loadedTextures.erase(filepath);
+		textures.erase(filepath);
 		return nullptr;
 	}
-	return loadedTextures[filepath];
+	return textures[filepath];
 }
 
 void TextureManager::UnLoad(const std::string& filepath)
 {
-	delete loadedTextures[filepath];
+	delete textures[filepath];
 	
-	loadedTextures.erase(filepath);
+	textures.erase(filepath);
 	// it returns a size_t so we may log if none was deleted
 }
 
 void TextureManager::UnLoadAll()
 {
-	for (auto it = loadedTextures.cbegin(); it != loadedTextures.cend();)
+	for (auto it = textures.cbegin(); it != textures.cend();)
 	{
 		UnLoad(it++->first);
 	}
@@ -51,6 +51,9 @@ void TextureManager::UnLoadAll()
 
 Texture::Texture()
 {
+	_texture = nullptr;
+	renderer = nullptr;
+
 	width = 0;
 	height = 0;
 }
@@ -66,6 +69,11 @@ Texture::~Texture()
 	Destroy();
 }
 
+void Texture::Render(const SDL_Rect* srcRect, const SDL_Rect* dstRect)
+{
+	SDL_RenderCopy(renderer, _texture, srcRect, dstRect);
+}
+
 void Texture::SetRenderer(SDL_Renderer* _renderer)
 {
 	renderer = _renderer;
@@ -74,11 +82,15 @@ void Texture::SetRenderer(SDL_Renderer* _renderer)
 bool Texture::LoadTextureFromFile(const std::string& filepath)
 {
 	_texture = IMG_LoadTexture(renderer, filepath.c_str());
+
 	if (_texture == nullptr)
 	{
-		printf("Texture failed to load! From path: %s\n", filepath.c_str());
+		printf("Texture failed to load!\n");
 		return false;
 	}
+	
+	SDL_QueryTexture(_texture, nullptr, nullptr, &width, &height);
+
 	return true;
 }
 
