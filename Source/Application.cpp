@@ -63,12 +63,12 @@ bool Application::Init()
 
 bool Application::LoadMedia()
 {
-	TextureManager::Init(renderer);
+	textureManager.Init(renderer);
 
 	// Preload all the textures here
-	TextureManager::Load("resources/smiley.png");
-	TextureManager::Load("resources/ktot.png");
-	TextureManager::Load("resources/square.png");
+	textureManager.Load("resources/smiley.png");
+	textureManager.Load("resources/ktot.png");
+	textureManager.Load("resources/square.png");
 	
 	//manager.CreateEnitity();
 	
@@ -240,7 +240,7 @@ void Application::MainLoop()
 
 void Application::Close()
 {
-	TextureManager::UnLoadAll();
+	textureManager.UnLoadAll();
 	SDL_DestroyRenderer(renderer);
 	window.DestroyWindow();
 

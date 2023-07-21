@@ -2,6 +2,7 @@
 
 #include "Vector.h"
 
+// It uses something similair to euler angles however it has only one axis of rotation
 struct Shape2D
 {
 	Shape2D() : angleRad(0){}

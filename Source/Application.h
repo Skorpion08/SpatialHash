@@ -36,6 +36,7 @@ private:
 
 	// ecs stuff
 	EntityManager& entityManager = EntityManager::GetInstance();
+	TextureManager& textureManager = TextureManager::GetInstance();
 
 	SpriteSystem spritesSystem;
 	TransformSystem transformSystem;

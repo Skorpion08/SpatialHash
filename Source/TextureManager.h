@@ -44,20 +44,26 @@ public:
 	TextureManager(TextureManager const&) = delete;
 	TextureManager& operator=(TextureManager const&) = delete;
 
-	static void Init(SDL_Renderer* renderer);
+	static TextureManager& GetInstance()
+	{
+		static TextureManager instance;
+		return instance;
+	}
 
-	static Texture* Load(const std::string& filepath);
+	void Init(SDL_Renderer* renderer);
 
-	static void UnLoad(const std::string& filepath);
+	Texture* Load(const std::string& filepath);
 
-	static void UnLoadAll();
+	void UnLoad(const std::string& filepath);
+
+	void UnLoadAll();
 
 private:
 	// It's a way to store currently loaded textures
 	// Key: filepath
 	// Value: texture
-	static std::unordered_map<std::string, Texture*> textures;
+	std::unordered_map<std::string, Texture*> textures;
 
-	static SDL_Renderer* renderer;
+	SDL_Renderer* renderer;
 
 };

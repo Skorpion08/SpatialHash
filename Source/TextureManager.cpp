@@ -2,10 +2,9 @@
 
 #include "TextureManager.h"
 
-
-// Static members
-std::unordered_map<std::string, Texture*> TextureManager::textures;
-SDL_Renderer* TextureManager::renderer;
+TextureManager::TextureManager()
+{
+}
 
 void TextureManager::Init(SDL_Renderer* _renderer)
 {
