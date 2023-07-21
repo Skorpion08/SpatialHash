@@ -44,7 +44,7 @@ bool Application::Init()
 	}
 	
 	// Added vsync because ima to lazy to add frame cap or deltatime
-	renderer = SDL_CreateRenderer(window.GetSDL_Window(), -1, SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window.GetSDL_Window(), -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (!renderer)
 	{
 		printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
@@ -255,7 +255,9 @@ void Application::MainLoop()
 
 		Uint64 end = SDL_GetPerformanceCounter();
 		float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
-		//printf("FPS: %f\n", 1.0f / elapsed);
+
+		if(SDL_GetTicks() == 5000)
+		 printf("FPS: %f\n", 1.0f / elapsed);
 		
 	}
 }

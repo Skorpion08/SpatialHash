@@ -142,22 +142,20 @@ CollisionInfo& CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
 	shapeA.GetSideVectors(sidesA);
 	shapeB.GetSideVectors(sidesB);
 
-	sidesA;
-	shapeA.vertices;
+	// TODO Check wether emplace back is a lot faster
 
 	// We use the normals as our axes for checking
 	std::vector<Vector2> axes;
-	axes.reserve(sidesA.size() + sidesB.size());
+	axes.resize(sidesA.size() + sidesB.size());
 	
 	for (size_t i = 0; i < sidesA.size(); ++i)
 	{
-		axes.push_back(Vector::GetNormal(Vector::GetNormalized(sidesA[i])));
+		axes.emplace_back(Vector::GetNormal(Vector::GetNormalized(sidesA[i])));
 	}
-	for (size_t i = 0; i < sidesA.size(); ++i)
+	for (size_t i = 0; i < sidesB.size(); ++i)
 	{
-		axes.push_back(Vector::GetNormal(Vector::GetNormalized(sidesB[i])));
+		axes.emplace_back(Vector::GetNormal(Vector::GetNormalized(sidesB[i])));
 	}
-
 	// Loop over all the axes
 	for (uint32_t i = 0; i < axes.size(); ++i)
 	{
@@ -196,6 +194,7 @@ CollisionInfo& CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
 	//printf("collision\n");
 
 	// Not finished code
+	info.overlap = true;
 
 	return info;
 }

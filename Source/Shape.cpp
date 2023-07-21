@@ -21,7 +21,7 @@ void Shape2D::ApplyRotation(float angleRadians)
 
 void Shape2D::GetSideVectors(std::vector<Vector2>& outSides)
 {
-	outSides.reserve(vertices.size());
+	outSides.resize(vertices.size());
 
 	for (uint32_t i = 0; i < vertices.size(); ++i)
 	{
