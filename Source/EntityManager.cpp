@@ -140,10 +140,10 @@ void CollisionSystem::SolveCollisions()
 	auto& entities = manager.GetEntities();
 	auto& registry = manager.GetRegistry();
 
-	CollisionInfo info = IsCollidingAABB(*registry.aabbs[0].boundingBox, *registry.aabbs[1].boundingBox);
+	CollisionInfo info = IsCollidingAABB(*registry.aabbs[0].boundingBox, *registry.aabbs[manager.NumberOfEntities()-1].boundingBox);
 	registry.transforms[0].posX += info.mtv.x;
 	registry.transforms[0].posY += info.mtv.y;
-	printf("x: %f y: %f\n", info.mtv.x, info.mtv.y);
+	//printf("x: %f y: %f\n", info.mtv.x, info.mtv.y);
 
 
 	// Naive approach

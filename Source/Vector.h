@@ -14,7 +14,7 @@ struct Vector2
 {
 	Vector2() : x(0), y(0) {}
 	Vector2(float p_x, float p_y) : x(p_x), y(p_y) {}
-	Vector2(Point2 a, Point2 b) : x(b.x-a.x), y(b.y-b.y) {}
+	Vector2(Point2 a, Point2 b) : x(b.x-a.x), y(b.y-a.y) {}
 
 	float x, y;
 

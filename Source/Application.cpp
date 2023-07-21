@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "Vector.h"
+#include "Shape.h"
 
 
 Application::Application()
@@ -94,17 +95,33 @@ void Application::MainLoop()
 	Vector2 normal = vector.GetNormal();
 	printf("vector: %f\n", Vector::DotProduct(vector, normal));
 	*/
+	/*
 	EntityID ent = entityManager.CreateEnitity();
 	entityManager.GetRegistry().transforms.emplace(ent, TransformComponent{ 150,150 });
 	auto rect = SDL_Rect{ 0,0,100,100 };
 	entityManager.GetRegistry().sprites.emplace(ent, SpriteComponent{ nullptr, &rect, TextureManager::Load("resources/square.png") });
 	entityManager.GetRegistry().aabbs.emplace(ent, AABB{ &rect });
 
+	for (int i = 0; i < 1000; i++)
+	{
+		entityManager.CreateEnitity();
+	}
+
 	auto rect2 = SDL_Rect{ 0,0,100,100 };
 	EntityID ent2 = entityManager.CreateEnitity();
 	entityManager.GetRegistry().transforms.emplace(ent2, TransformComponent{ 200,200 });
 	entityManager.GetRegistry().sprites.emplace(ent2, SpriteComponent{ nullptr, &rect2, TextureManager::Load("resources/square.png") });
 	entityManager.GetRegistry().aabbs.emplace(ent2, AABB{ &rect2 });
+	*/
+
+	Shape2D shape;
+	shape.center.x = 150;
+	shape.center.y = 150;
+	shape.vertices.reserve(4);
+	shape.vertices.push_back(Point2(100, 100));
+	shape.vertices.push_back(Point2(100, 200));
+	shape.vertices.push_back(Point2(200, 200));
+	shape.vertices.push_back(Point2(200, 100));
 
 	Uint32 lastUpdate = SDL_GetTicks();
 	Uint32 currentUpdate = 0;
@@ -136,16 +153,17 @@ void Application::MainLoop()
 				}
 			}
 			*/
+			/*
 			if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
 			{
 				if (e.key.keysym.sym == SDLK_a)
-					entityManager.GetRegistry().transforms[ent].velX = -100;
+					entityManager.GetRegistry().transforms[ent].velX = -200;
 				else if (e.key.keysym.sym == SDLK_d)
-					entityManager.GetRegistry().transforms[ent].velX = 100;
+					entityManager.GetRegistry().transforms[ent].velX = 200;
 				else if (e.key.keysym.sym == SDLK_w)
-					entityManager.GetRegistry().transforms[ent].velY = -100;
+					entityManager.GetRegistry().transforms[ent].velY = -200;
 				else if (e.key.keysym.sym == SDLK_s)
-					entityManager.GetRegistry().transforms[ent].velY = 100;
+					entityManager.GetRegistry().transforms[ent].velY = 200;
 			}
 			else if (e.type == SDL_KEYUP && e.key.repeat == 0)
 			{
@@ -158,11 +176,27 @@ void Application::MainLoop()
 				else if (e.key.keysym.sym == SDLK_s)
 					entityManager.GetRegistry().transforms[ent].velY = 0;
 			}
+			*/
+			if (e.type == SDL_KEYDOWN)
+			{
+				if(e.key.keysym.sym == SDLK_RIGHT)
+					shape.ApplyRotation(0.1);
+				else if (e.key.keysym.sym == SDLK_LEFT)
+					shape.ApplyRotation(-0.1);
+
+				/*
+				for (auto& vert : shape.vertices)
+				{
+					printf("x: %f y: %f\n", vert.x, vert.y);
+				}
+				printf("\n");
+				*/
+			}
 		}
 
 		if (quit)
 			break;
-		//Uint64 start = SDL_GetPerformanceCounter();
+		Uint64 start = SDL_GetPerformanceCounter();
 
 		//Clear screen
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -174,17 +208,31 @@ void Application::MainLoop()
 		//printf("deltatime %f\n", deltaTime);
 		transformSystem.Update(deltaTime);
 		collisionSystem.Update();
-		collisionSystem.SolveCollisions();
+		//collisionSystem.SolveCollisions();
 		spritesSystem.Update();
 		spritesSystem.Render();
+		
+		//shape.ApplyRotation(1*deltaTime);
+
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		for (int i = 0; i < shape.vertices.size(); i++)
+		{
+			if (i+1 == shape.vertices.size())
+			{
+				SDL_RenderDrawLine(renderer, shape.vertices[i].x, shape.vertices[i].y, shape.vertices[0].x, shape.vertices[0].y);
+				break;
+			}
+			SDL_RenderDrawLine(renderer, shape.vertices[i].x, shape.vertices[i].y, shape.vertices[i+1].x, shape.vertices[i + 1].y);
+		}
+		
 
 		lastUpdate = currentUpdate;
 		//printf("velocity Y %f\n", entityManager::GetRegistry().transforms[smiley].velY);
 		//Update screen
 		SDL_RenderPresent(renderer);
 
-		//Uint64 end = SDL_GetPerformanceCounter();
-		//float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
+		Uint64 end = SDL_GetPerformanceCounter();
+		float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
 		//printf("FPS: %f\n", 1.0f / elapsed);
 		
 	}
