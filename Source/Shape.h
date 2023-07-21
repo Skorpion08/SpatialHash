@@ -12,10 +12,13 @@ struct Shape2D
 
 	Point2 center;
 
-	std::vector<Point2> vertices;
+	std::vector<Vector2> vertices;
 
 	// Rotation is clockwise
 
+	//void ApplyRotation(float angleRadians);
 	void ApplyRotation(float angleRadians);
-	void SetRotation(float angleRadians);
+
+
+	void GetSideVectors(std::vector<Vector2>& outSides);
 };

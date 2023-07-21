@@ -129,9 +129,75 @@ CollisionInfo CollisionSystem::IsCollidingAABB(SDL_Rect& a, SDL_Rect& b)
 	}
 }
 
-bool CollisionSystem::IsCollidingSAT(std::vector<Point2>& verticesA, std::vector<Point2>& verticesB)
+CollisionInfo CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
 {
-	return false;
+	CollisionInfo info;
+
+	std::vector<Vector2> sidesA;
+	std::vector<Vector2> sidesB;
+
+	//sidesA.reserve(shapeA.vertices.size());
+	//sidesB.reserve(shapeB.vertices.size());
+
+	shapeA.GetSideVectors(sidesA);
+	shapeB.GetSideVectors(sidesB);
+
+	sidesA;
+	shapeA.vertices;
+
+	// We use the normals as our axes for checking
+	std::vector<Vector2> axes;
+	axes.reserve(sidesA.size() + sidesB.size());
+	
+	for (size_t i = 0; i < sidesA.size(); ++i)
+	{
+		axes.push_back(Vector::GetNormal(Vector::GetNormalized(sidesA[i])));
+	}
+	for (size_t i = 0; i < sidesA.size(); ++i)
+	{
+		axes.push_back(Vector::GetNormal(Vector::GetNormalized(sidesB[i])));
+	}
+
+	// Loop over all the axes
+	for (uint32_t i = 0; i < axes.size(); ++i)
+	{
+		// Project all of the vertices of A and B onto the axis
+
+		// Min and max vertices of each shape on the axis
+		float minA = Vector::DotProduct(shapeA.vertices[0], axes[i]), maxA = minA;
+		float minB = Vector::DotProduct(shapeB.vertices[0], axes[i]), maxB = minB;
+	
+		for (uint32_t j = 0; j < shapeA.vertices.size(); ++j) // Find the min and max for shape A on this axis
+		{
+			// Project the vertex onto the axis
+			float projection = Vector::DotProduct(shapeA.vertices[j], axes[i]);
+
+			minA = std::min(minA, projection);
+			maxA = std::max(maxA, projection);
+		}
+
+		for (uint32_t j = 0; j < shapeB.vertices.size(); ++j) // The same for B
+		{
+			// Project the vertex onto the axis
+			float projection = Vector::DotProduct(shapeB.vertices[j], axes[i]);
+
+			minB = std::min(minB, projection);
+			maxB = std::max(maxB, projection);
+		}
+		if (minA - maxB > 0 || minB - maxA > 0)
+		{
+			// There is a gap and we can quit
+			info.overlap = false;
+			//printf("no collision\n");
+			return info;
+		}
+	}
+	// If we didn't find any seperating axis we are colliding
+	//printf("collision\n");
+
+	// Not finished code
+
+	return info;
 }
 
 void CollisionSystem::SolveCollisions()
@@ -139,12 +205,15 @@ void CollisionSystem::SolveCollisions()
 	auto& manager = EntityManager::GetInstance();
 	auto& entities = manager.GetEntities();
 	auto& registry = manager.GetRegistry();
-
+	
+	/*
 	CollisionInfo info = IsCollidingAABB(*registry.aabbs[0].boundingBox, *registry.aabbs[manager.NumberOfEntities()-1].boundingBox);
 	registry.transforms[0].posX += info.mtv.x;
 	registry.transforms[0].posY += info.mtv.y;
+	*/
 	//printf("x: %f y: %f\n", info.mtv.x, info.mtv.y);
 
+	CollisionInfo info = IsCollidingSAT(*registry.sats[0], *registry.sats[1]);
 
 	// Naive approach
 	/*

@@ -7,6 +7,7 @@
 
 #include "TextureManager.h"
 #include "Vector.h"
+#include "Shape.h"
 
 using EntityID = size_t;
 
@@ -51,7 +52,7 @@ struct Registry
 	std::unordered_map<EntityID, SpriteComponent> sprites;
 	std::unordered_map<EntityID, TransformComponent> transforms;
 	std::unordered_map<EntityID, AABB> aabbs;
-	std::unordered_map<EntityID, SAT> sats;
+	std::unordered_map<EntityID, Shape2D*> sats;
 };
 /*
 struct Entity
@@ -125,6 +126,6 @@ struct CollisionSystem
 
 	// Takes in two aabbs
 	CollisionInfo IsCollidingAABB(SDL_Rect& a, SDL_Rect& b);
-	bool IsCollidingSAT(std::vector<Point2>& verticesA, std::vector<Point2>& verticesB);
+	CollisionInfo IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB);
 	void SolveCollisions();
 };

@@ -44,7 +44,7 @@ bool Application::Init()
 	}
 	
 	// Added vsync because ima to lazy to add frame cap or deltatime
-	renderer = SDL_CreateRenderer(window.GetSDL_Window(), -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	renderer = SDL_CreateRenderer(window.GetSDL_Window(), -1, SDL_RENDERER_ACCELERATED);
 	if (!renderer)
 	{
 		printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
@@ -113,16 +113,29 @@ void Application::MainLoop()
 	entityManager.GetRegistry().sprites.emplace(ent2, SpriteComponent{ nullptr, &rect2, TextureManager::Load("resources/square.png") });
 	entityManager.GetRegistry().aabbs.emplace(ent2, AABB{ &rect2 });
 	*/
-
+	EntityID poly = entityManager.CreateEnitity();
 	Shape2D shape;
 	shape.center.x = 150;
 	shape.center.y = 150;
 	shape.vertices.reserve(4);
-	shape.vertices.push_back(Point2(100, 100));
-	shape.vertices.push_back(Point2(100, 200));
-	shape.vertices.push_back(Point2(200, 200));
-	shape.vertices.push_back(Point2(200, 100));
+	shape.vertices.push_back(Vector2(100, 100));
+	shape.vertices.push_back(Vector2(100, 200));
+	shape.vertices.push_back(Vector2(200, 200));
+	shape.vertices.push_back(Vector2(200, 100));
 
+	EntityID poly2 = entityManager.CreateEnitity();
+	Shape2D shape2;
+	shape2.center.x = 150+100;
+	shape2.center.y = 150+100;
+	shape2.vertices.reserve(4);
+	shape2.vertices.push_back(Vector2(100 + 90, 100 + 90));
+	shape2.vertices.push_back(Vector2(100 + 90, 200 + 90));
+	shape2.vertices.push_back(Vector2(200 + 90, 200 + 90));
+	shape2.vertices.push_back(Vector2(200 + 90, 100 + 90));
+
+	entityManager.GetRegistry().sats.insert({ poly, &shape });
+	entityManager.GetRegistry().sats.insert({ poly2, &shape2 });
+	
 	Uint32 lastUpdate = SDL_GetTicks();
 	Uint32 currentUpdate = 0;
 
@@ -208,7 +221,7 @@ void Application::MainLoop()
 		//printf("deltatime %f\n", deltaTime);
 		transformSystem.Update(deltaTime);
 		collisionSystem.Update();
-		//collisionSystem.SolveCollisions();
+		collisionSystem.SolveCollisions();
 		spritesSystem.Update();
 		spritesSystem.Render();
 		
@@ -223,6 +236,15 @@ void Application::MainLoop()
 				break;
 			}
 			SDL_RenderDrawLine(renderer, shape.vertices[i].x, shape.vertices[i].y, shape.vertices[i+1].x, shape.vertices[i + 1].y);
+		}
+		for (int i = 0; i < shape2.vertices.size(); i++)
+		{
+			if (i + 1 == shape2.vertices.size())
+			{
+				SDL_RenderDrawLine(renderer, shape2.vertices[i].x, shape2.vertices[i].y, shape2.vertices[0].x, shape2.vertices[0].y);
+				break;
+			}
+			SDL_RenderDrawLine(renderer, shape2.vertices[i].x, shape2.vertices[i].y, shape2.vertices[i + 1].x, shape2.vertices[i + 1].y);
 		}
 		
 
