@@ -125,7 +125,7 @@ struct CollisionSystem
 	void Update();
 
 	// Takes in two aabbs
-	CollisionInfo IsCollidingAABB(SDL_Rect& a, SDL_Rect& b);
-	CollisionInfo IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB);
+	CollisionInfo& IsCollidingAABB(SDL_Rect& a, SDL_Rect& b);
+	CollisionInfo& IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB);
 	void SolveCollisions();
 };

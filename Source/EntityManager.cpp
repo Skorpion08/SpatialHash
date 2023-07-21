@@ -79,7 +79,7 @@ void CollisionSystem::Update()
 	}
 }
 
-CollisionInfo CollisionSystem::IsCollidingAABB(SDL_Rect& a, SDL_Rect& b)
+CollisionInfo& CollisionSystem::IsCollidingAABB(SDL_Rect& a, SDL_Rect& b)
 {
 	CollisionInfo collisionInfo;
 
@@ -129,7 +129,7 @@ CollisionInfo CollisionSystem::IsCollidingAABB(SDL_Rect& a, SDL_Rect& b)
 	}
 }
 
-CollisionInfo CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
+CollisionInfo& CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
 {
 	CollisionInfo info;
 
