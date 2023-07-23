@@ -118,23 +118,36 @@ void Application::MainLoop()
 	shape.center.x = 150;
 	shape.center.y = 150;
 	shape.vertices.reserve(4);
+	shape.sides.resize(4);
+	/* square
 	shape.vertices.push_back(Vector2(100, 100));
 	shape.vertices.push_back(Vector2(100, 200));
 	shape.vertices.push_back(Vector2(200, 200));
 	shape.vertices.push_back(Vector2(200, 100));
+	*/
+	shape.vertices.push_back(Vector2(100, 100));
+	shape.vertices.push_back(Vector2(90, 250));
+	//shape.vertices.push_back(Vector2(200, 200));
+	shape.vertices.push_back(Vector2(200, 100));
+	CollisionComponent comp;
+	comp.collider = &shape;
+
 
 	EntityID poly2 = entityManager.CreateEnitity();
 	Shape2D shape2;
 	shape2.center.x = 150+100;
 	shape2.center.y = 150+100;
 	shape2.vertices.reserve(4);
-	shape2.vertices.push_back(Vector2(100 + 90, 100 + 90));
+	shape2.sides.resize(4);
+	shape2.vertices.push_back(Vector2(110 + 90, 100 + 90));
 	shape2.vertices.push_back(Vector2(100 + 90, 200 + 90));
 	shape2.vertices.push_back(Vector2(200 + 90, 200 + 90));
 	shape2.vertices.push_back(Vector2(200 + 90, 100 + 90));
+	CollisionComponent comp2;
+	comp2.collider = &shape2;
 
-	entityManager.GetRegistry().sats.insert({ poly, &shape });
-	entityManager.GetRegistry().sats.insert({ poly2, &shape2 });
+	entityManager.GetRegistry().collisionComponents.insert({ poly, comp });
+	entityManager.GetRegistry().collisionComponents.insert({ poly2, comp2 });
 	
 	Uint32 lastUpdate = SDL_GetTicks();
 	Uint32 currentUpdate = 0;
@@ -196,6 +209,38 @@ void Application::MainLoop()
 					shape.ApplyRotation(0.1);
 				else if (e.key.keysym.sym == SDLK_LEFT)
 					shape.ApplyRotation(-0.1);
+				if (e.key.keysym.sym == SDLK_a)
+				{
+					shape.center.x += -10;
+					shape.vertices[0].x += -10;
+					shape.vertices[1].x += -10;
+					shape.vertices[2].x += -10;
+					shape.vertices[3].x += -10;
+				}
+				if (e.key.keysym.sym == SDLK_d)
+				{
+					shape.center.x += 10;
+					shape.vertices[0].x += 10;
+					shape.vertices[1].x += 10;
+					shape.vertices[2].x += 10;
+					shape.vertices[3].x += 10;
+				}
+				if (e.key.keysym.sym == SDLK_w)
+				{
+					shape.center.y += -10;
+					shape.vertices[0].y += -10;
+					shape.vertices[1].y += -10;
+					shape.vertices[2].y += -10;
+					shape.vertices[3].y += -10;
+				}
+				if (e.key.keysym.sym == SDLK_s)
+				{
+					shape.center.y += 10;
+					shape.vertices[0].y += 10;
+					shape.vertices[1].y += 10;
+					shape.vertices[2].y += 10;
+					shape.vertices[3].y += 10;
+				}
 
 				/*
 				for (auto& vert : shape.vertices)
@@ -255,9 +300,7 @@ void Application::MainLoop()
 
 		Uint64 end = SDL_GetPerformanceCounter();
 		float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
-
-		if(SDL_GetTicks() == 5000)
-		 printf("FPS: %f\n", 1.0f / elapsed);
+		//printf("FPS: %f\n", 1.0f / elapsed);
 		
 	}
 }

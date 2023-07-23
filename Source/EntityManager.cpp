@@ -13,6 +13,7 @@ void EntityManager::DestroyEntity(EntityID entityID)
 	// deactivate other components
 	registry.sprites.erase(entityID);
 	registry.transforms.erase(entityID);
+	registry.collisionComponents.erase(entityID);
 	registry.aabbs.erase(entityID);
 	registry.sats.erase(entityID);
 
@@ -33,8 +34,8 @@ void SpriteSystem::Update()
 			auto& transform = registry.transforms[entityID];
 
 			// Center the texture
-			sprite.dst->x = transform.posX - sprite.dst->w / 2;
-			sprite.dst->y = transform.posY - sprite.dst->h / 2;
+			sprite.dst->x = transform.posX - sprite.dst->w / 2.f;
+			sprite.dst->y = transform.posY - sprite.dst->h / 2.f;
 		}
 	}
 }
@@ -64,18 +65,44 @@ void TransformSystem::Update(double deltaTime)
 		transform.velY += transform.accY * deltaTime;
 	}
 }
+#include<chrono>
+
+/**
+ *
+ */
+class Timer
+{
+public:
+	Uint64 start, end;
+	Timer()
+	{
+		start = SDL_GetPerformanceCounter();
+	}
+	~Timer()
+	{
+		end = SDL_GetPerformanceCounter();
+		double elapsed = (end - start) / (double)SDL_GetPerformanceFrequency();
+		printf("ms: %f\n", elapsed * 1000.f);
+	}
+};
 
 void CollisionSystem::Update()
 {
 	auto& manager = EntityManager::GetInstance();
 	auto& registry = manager.GetRegistry();
 
+	/*
 	for (auto& [entityID, aabb] : registry.aabbs)
 	{
 		// Center the aabb
 		auto& transform = registry.transforms[entityID];
 		aabb.boundingBox->x = transform.posX - aabb.boundingBox->w / 2;
 		aabb.boundingBox->y = transform.posY - aabb.boundingBox->h / 2;
+	}
+	*/
+	for (auto& [entityID, CollisionComponent] : registry.collisionComponents)
+	{
+		CollisionComponent.collider->UpdateSideVectors();
 	}
 }
 
@@ -133,20 +160,12 @@ CollisionInfo& CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
 {
 	CollisionInfo info;
 
-	std::vector<Vector2> sidesA;
-	std::vector<Vector2> sidesB;
-
-	//sidesA.reserve(shapeA.vertices.size());
-	//sidesB.reserve(shapeB.vertices.size());
-
-	shapeA.GetSideVectors(sidesA);
-	shapeB.GetSideVectors(sidesB);
-
-	// TODO Check wether emplace back is a lot faster
+	auto& sidesA = shapeA.sides;
+	auto& sidesB = shapeB.sides;
 
 	// We use the normals as our axes for checking
 	std::vector<Vector2> axes;
-	axes.resize(sidesA.size() + sidesB.size());
+	axes.reserve(sidesA.size() + sidesB.size());
 	
 	for (size_t i = 0; i < sidesA.size(); ++i)
 	{
@@ -182,16 +201,17 @@ CollisionInfo& CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
 			minB = std::min(minB, projection);
 			maxB = std::max(maxB, projection);
 		}
+
 		if (minA - maxB > 0 || minB - maxA > 0)
 		{
 			// There is a gap and we can quit
 			info.overlap = false;
-			//printf("no collision\n");
+			printf("no collision\n");
 			return info;
 		}
 	}
 	// If we didn't find any seperating axis we are colliding
-	//printf("collision\n");
+	printf("collision\n");
 
 	// Not finished code
 	info.overlap = true;
@@ -212,7 +232,7 @@ void CollisionSystem::SolveCollisions()
 	*/
 	//printf("x: %f y: %f\n", info.mtv.x, info.mtv.y);
 
-	CollisionInfo info = IsCollidingSAT(*registry.sats[0], *registry.sats[1]);
+	CollisionInfo info = IsCollidingSAT(*registry.collisionComponents[0].collider, *registry.collisionComponents[1].collider);
 
 	// Naive approach
 	/*

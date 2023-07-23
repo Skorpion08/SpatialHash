@@ -32,7 +32,7 @@ struct TransformComponent
 
 struct CollisionComponent
 {
-
+	Shape2D* collider;
 };
 
 struct AABB
@@ -51,6 +51,7 @@ struct Registry
 {
 	std::unordered_map<EntityID, SpriteComponent> sprites;
 	std::unordered_map<EntityID, TransformComponent> transforms;
+	std::unordered_map<EntityID, CollisionComponent> collisionComponents;
 	std::unordered_map<EntityID, AABB> aabbs;
 	std::unordered_map<EntityID, Shape2D*> sats;
 };

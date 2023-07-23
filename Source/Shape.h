@@ -7,18 +7,22 @@ struct Shape2D
 {
 	Shape2D() : angleRad(0){}
 
-	// Counter clockwise
+	// Clockwise
 	float angleRad;
 
 	Point2 center;
 
 	std::vector<Vector2> vertices;
 
+	std::vector<Vector2> sides;
+
 	// Rotation is clockwise
 
 	//void ApplyRotation(float angleRadians);
 	void ApplyRotation(float angleRadians);
 
+	// Deprecated now
+	std::vector<Vector2>& GetSideVectors_DEPRECATED();
 
-	void GetSideVectors(std::vector<Vector2>& outSides);
+	void UpdateSideVectors();
 };
