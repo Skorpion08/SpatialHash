@@ -16,52 +16,52 @@ using Entity = bool;
 
 // Components:
 
-struct SpriteComponent
+struct Sprite
 {
 	SDL_Rect* src;
 	SDL_Rect* dst;
 	Texture* texture;
 };
 
-struct TransformComponent
+struct Transform
 {
-	float posX, posY;
-	float velX, velY;
-	float accX, accY;
+	Transform() = default;
+	Transform(float posX, float posY) : pos(posX, posY) {}
+	Transform(Vector2 _pos, float _rotation, Vector2 _scale) : pos(_pos), rotation(_rotation), scale(_scale) {}
+	Vector2 pos;
+	float rotation;
+	Vector2 scale = { 1.0f,1.0f };
 };
 
-struct CollisionComponent
+struct Kinematics
 {
+	Vector2 vel;
+	Vector2 acc;
+
+	float angularVel;
+	float angularAcc;
+};
+
+struct Rigidbody
+{
+	float torque;
+	float momentOfInertia;
+};
+
+struct Collision
+{
+	bool blockCollision;
 	Shape2D* collider;
 };
-
-struct AABB
-{
-	SDL_Rect* boundingBox;
-};
-
-struct SAT
-{
-
-};
-
 
 // Holds what components entities use
 struct Registry
 {
-	std::unordered_map<EntityID, SpriteComponent> sprites;
-	std::unordered_map<EntityID, TransformComponent> transforms;
-	std::unordered_map<EntityID, CollisionComponent> collisionComponents;
-	std::unordered_map<EntityID, AABB> aabbs;
-	std::unordered_map<EntityID, Shape2D*> sats;
+	std::unordered_map<EntityID, Sprite> sprites;
+	std::unordered_map<EntityID, Transform> transforms;
+	std::unordered_map<EntityID, Kinematics> kinematics;
+	std::unordered_map<EntityID, Collision> collisionComponents;
 };
-/*
-struct Entity
-{
-	// All possible components here
-	bool destroyed = false;
-};
-*/
 class EntityManager
 {
 	EntityManager() : nextEntityID(0) {}
@@ -81,9 +81,16 @@ public:
 	// Returns its ID
 	EntityID CreateEnitity();
 
+	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
+	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
+	Kinematics* AddKinematics(EntityID entityID, Vector2 vel = { 0,0 }, Vector2 acc = { 0,0 }, float angularVel = 0.0f, float angularAcc = 0.0f);
+	Rigidbody* AddRigidbody(EntityID entityID);
+	Collision* AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision = true);
+
+
 	void DestroyEntity(EntityID entityID);
 
-	inline bool IsEntityIDValid(EntityID entityID) { return entityID > 0 && entityID < NumberOfEntities();}
+	inline bool EntityIDValid(EntityID entityID) { return entityID >= 0 && entityID < NumberOfEntities();}
 
 	inline size_t NumberOfEntities() { return entities.size(); }
 
@@ -113,6 +120,8 @@ struct TransformSystem
 {
 	// Applies velocity
 	void Update(double deltaTime);
+
+	void SetScale(EntityID entityID, Vector2 newScale);
 };
 
 struct CollisionInfo
@@ -126,7 +135,11 @@ struct CollisionSystem
 	void Update();
 
 	// Takes in two aabbs
-	CollisionInfo& IsCollidingAABB(SDL_Rect& a, SDL_Rect& b);
-	CollisionInfo& IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB);
+	CollisionInfo AABBtoAABB(AABB& a, AABB& b);
+	CollisionInfo OBBtoOBB(Shape2D& shapeA, Shape2D& shapeB);
+	CollisionInfo POLYtoPOLY(Shape2D& shapeA, Shape2D& shapeB);
+
+	//CollisionInfo& CIRCLEtoCIRCLE(Circle& a, Circle& b);
+	//CollisionInfo& CIRCLEtoCIRCLE(Circle& a, Circle& b);
 	void SolveCollisions();
 };

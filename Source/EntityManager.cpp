@@ -2,8 +2,38 @@
 
 EntityID EntityManager::CreateEnitity()
 {
-	entities.push_back(true);
+	entities.emplace_back(true);
 	return nextEntityID++;
+}
+
+Sprite* EntityManager::AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture)
+{
+	if (EntityIDValid(entityID))
+	{
+		GetInstance().GetRegistry().sprites.emplace(entityID, Sprite(src, dst, texture));
+		return &GetInstance().GetRegistry().sprites[entityID];
+	}
+	return nullptr;
+}
+
+Transform* EntityManager::AddTransform(EntityID entityID, Vector2 position, float rotation, Vector2 scale)
+{
+	if (EntityIDValid(entityID))
+	{
+		GetInstance().GetRegistry().transforms.emplace(entityID, Transform(position, rotation, scale));
+		return &GetInstance().GetRegistry().transforms[entityID];
+	}
+	return nullptr;
+}
+
+Kinematics* EntityManager::AddKinematics(EntityID entityID, Vector2 vel, Vector2 acc, float angularVel, float angularAcc)
+{
+	if (EntityIDValid(entityID))
+	{
+		GetInstance().GetRegistry().kinematics.emplace(entityID, Kinematics(vel, acc, angularVel, angularAcc));
+		return &GetInstance().GetRegistry().kinematics[entityID];
+	}
+	return nullptr;
 }
 
 void EntityManager::DestroyEntity(EntityID entityID)
@@ -13,10 +43,8 @@ void EntityManager::DestroyEntity(EntityID entityID)
 	// deactivate other components
 	registry.sprites.erase(entityID);
 	registry.transforms.erase(entityID);
+	registry.kinematics.erase(entityID);
 	registry.collisionComponents.erase(entityID);
-	registry.aabbs.erase(entityID);
-	registry.sats.erase(entityID);
-
 }
 
 
@@ -34,8 +62,8 @@ void SpriteSystem::Update()
 			auto& transform = registry.transforms[entityID];
 
 			// Center the texture
-			sprite.dst->x = transform.posX - sprite.dst->w / 2.f;
-			sprite.dst->y = transform.posY - sprite.dst->h / 2.f;
+			sprite.dst->x = transform.pos.x - sprite.dst->w / 2.f;
+			sprite.dst->y = transform.pos.y - sprite.dst->h / 2.f;
 		}
 	}
 }
@@ -47,9 +75,18 @@ void SpriteSystem::Render()
 	
 	for (auto& [entityID, sprite] : registry.sprites)
 	{
-		sprite.texture->Render(sprite.src, sprite.dst);
-	}
+		if (registry.transforms.contains(entityID))
+		{
+			auto& transform = registry.transforms[entityID];
 
+			// We need to convert radians to degrees
+			sprite.texture->Render(sprite.src, sprite.dst, transform.rotation* 57.295779513082320876798154814105, nullptr);
+		}
+		else
+		{
+			sprite.texture->Render(sprite.src, sprite.dst);
+		}
+	}
 }
 
 void TransformSystem::Update(double deltaTime)
@@ -57,34 +94,45 @@ void TransformSystem::Update(double deltaTime)
 	auto& manager = EntityManager::GetInstance();
 	auto& registry = manager.GetRegistry();
 	
-	for (auto& [entityID, transform] : registry.transforms)
+	for (auto& [entityID, kinematics] : registry.kinematics)
 	{
-		transform.posX += transform.velX * deltaTime;
-		transform.posY += transform.velY * deltaTime;
-		transform.velX += transform.accX * deltaTime;
-		transform.velY += transform.accY * deltaTime;
+		// Apply kinematics and motion
+		auto& transform = registry.transforms[entityID];
+		// Apply velocity
+		transform.pos.x += kinematics.vel.x * deltaTime;
+		transform.pos.y += kinematics.vel.y * deltaTime;
+
+		// Move the collision component
+		if (registry.collisionComponents.contains(entityID))
+			registry.collisionComponents[entityID].collider->AddPosition(Vector2(kinematics.vel.x * deltaTime, kinematics.vel.y*deltaTime));
+
+		// Apply acceleration
+		kinematics.vel.x += kinematics.acc.x * deltaTime;
+		kinematics.vel.y += kinematics.acc.y * deltaTime;
+
+		// Apply angular velocity and acceleration
+		transform.rotation += kinematics.angularVel * deltaTime;
+
+		// Move the collision component
+		if (registry.collisionComponents.contains(entityID))
+			registry.collisionComponents[entityID].collider->AddRotation(kinematics.angularVel * deltaTime);
+
+		kinematics.angularVel += kinematics.angularAcc * deltaTime;
 	}
 }
-#include<chrono>
 
-/**
- *
- */
-class Timer
+void TransformSystem::SetScale(EntityID entityID, Vector2 scale)
 {
-public:
-	Uint64 start, end;
-	Timer()
+	auto& manager = EntityManager::GetInstance();
+	auto& registry = manager.GetRegistry();
+
+	if (registry.transforms.contains(entityID))
 	{
-		start = SDL_GetPerformanceCounter();
+		// Calculate the delta and the add one
+		Vector2 newScale = scale - registry.transforms[entityID].scale + Vector2(1, 1);
+
 	}
-	~Timer()
-	{
-		end = SDL_GetPerformanceCounter();
-		double elapsed = (end - start) / (double)SDL_GetPerformanceFrequency();
-		printf("ms: %f\n", elapsed * 1000.f);
-	}
-};
+}
 
 void CollisionSystem::Update()
 {
@@ -106,16 +154,23 @@ void CollisionSystem::Update()
 	}
 }
 
-CollisionInfo& CollisionSystem::IsCollidingAABB(SDL_Rect& a, SDL_Rect& b)
+CollisionInfo CollisionSystem::AABBtoAABB(AABB& a, AABB& b)
 {
-	CollisionInfo collisionInfo;
+	CollisionInfo info;
+
+	// Setup the corners
+	a.x = a.vertices[0].x;
+	a.y = a.vertices[0].y;
+
+	b.x = b.vertices[0].x;
+	b.y = b.vertices[0].y;
 
 	// Check if there is no overlap along any axis
 	if (a.y + a.h <= b.y || a.y >= b.y + b.h || a.x + a.w <= b.x || a.x >= b.x + b.w)
 	{
-		collisionInfo.overlap = false;
-		collisionInfo.mtv = { 0,0 };
-		return collisionInfo;
+		info.overlap = false;
+		info.mtv = { 0,0 };
+		return info;
 	}
 	else // Colliding
 	{
@@ -125,38 +180,38 @@ CollisionInfo& CollisionSystem::IsCollidingAABB(SDL_Rect& a, SDL_Rect& b)
 
 		// If the overlap result is positive it means there is overlap
 
-		// Determine the minimum translation vector based on wich side is penetrated
+		// Determine the minimum translation vector based on wich side is penetrated the least
 		// The axis with less overlap is the penetrating one
 		if (overlapX < overlapY) // On the x axis
 		{
 			if (a.x < b.x) // If penetrating from the left side
 			{
-				collisionInfo.mtv.x = -overlapX;
+				info.mtv.x = -overlapX;
 			}
 			else // Penetrating from the right side
 			{
-				collisionInfo.mtv.x = overlapX;
+				info.mtv.x = overlapX;
 			}
-			collisionInfo.mtv.y = 0; // No need to move it on the y axis
+			info.mtv.y = 0; // No need to move it on the y axis
 		}
 		else // On the y axis
 		{
-			collisionInfo.mtv.x = 0;
+			info.mtv.x = 0;
 			if (a.y < b.y) // If penetrating from above
 			{
-				collisionInfo.mtv.y = -overlapY;
+				info.mtv.y = -overlapY;
 			}
 			else // Penetrating from the right side
 			{
-				collisionInfo.mtv.y = overlapY;
+				info.mtv.y = overlapY;
 			}
 		}
-		collisionInfo.overlap = true;
-		return collisionInfo;
+		info.overlap = true;
+		return info;
 	}
 }
 
-CollisionInfo& CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
+CollisionInfo CollisionSystem::POLYtoPOLY(Shape2D& shapeA, Shape2D& shapeB)
 {
 	CollisionInfo info;
 
@@ -175,6 +230,8 @@ CollisionInfo& CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
 	{
 		axes.emplace_back(Vector::GetNormal(Vector::GetNormalized(sidesB[i])));
 	}
+
+	float minOverlap = std::numeric_limits<float>::infinity();
 	// Loop over all the axes
 	for (uint32_t i = 0; i < axes.size(); ++i)
 	{
@@ -201,19 +258,38 @@ CollisionInfo& CollisionSystem::IsCollidingSAT(Shape2D& shapeA, Shape2D& shapeB)
 			minB = std::min(minB, projection);
 			maxB = std::max(maxB, projection);
 		}
-
-		if (minA - maxB > 0 || minB - maxA > 0)
+		// We use negative numbers for no overlap
+		float overlap = std::min(maxA, maxB) - std::max(minA, minB);
+		//printf("%f\n", overlap);
+		// If overlap length is negative that means there is no overlap
+		if (overlap < 0)
 		{
 			// There is a gap and we can quit
+			info.mtv = { 0,0 };
 			info.overlap = false;
-			printf("no collision\n");
+			//printf("no collision\n");
 			return info;
 		}
+		else if (overlap < minOverlap)
+		{
+			minOverlap = overlap;
+
+			// use operator overloading to improve this code
+
+			info.mtv.x = axes[i].x * minOverlap;
+			info.mtv.y = axes[i].y * minOverlap;
+		}
+	
 	}
 	// If we didn't find any seperating axis we are colliding
-	printf("collision\n");
+	//printf("collision\n");
 
-	// Not finished code
+	// We need to reverse the mtv direction if it doesn't point in the same direction as from B to A
+	if (Vector::DotProduct(shapeA.center - shapeB.center, info.mtv) < 0)
+	{
+		info.mtv = -info.mtv;
+	}
+
 	info.overlap = true;
 
 	return info;
@@ -225,15 +301,70 @@ void CollisionSystem::SolveCollisions()
 	auto& entities = manager.GetEntities();
 	auto& registry = manager.GetRegistry();
 	
+	//CollisionInfo info = AABBtoAABB(static_cast<AABB&>(*registry.collisionComponents[2].collider), static_cast<AABB&>(*registry.collisionComponents[3].collider));
+	//registry.transforms[2].pos.x += info.mtv.x;
+	//registry.transforms[2].pos.y += info.mtv.y;
+	//registry.collisionComponents[2].collider->AddPosition(Vector2(info.mtv.x, info.mtv.y));
+	
 	/*
-	CollisionInfo info = IsCollidingAABB(*registry.aabbs[0].boundingBox, *registry.aabbs[manager.NumberOfEntities()-1].boundingBox);
-	registry.transforms[0].posX += info.mtv.x;
-	registry.transforms[0].posY += info.mtv.y;
+	auto& collisionComponent1 = registry.collisionComponents[0], collisionComponent2 = registry.collisionComponents[1];
+	EntityID entity1ID = 0, entity2ID = 1;
+
+	CollisionMethod method1 = collisionComponent1.collider->GetCollisionMethod();
+	CollisionMethod method2 = collisionComponent2.collider->GetCollisionMethod();
+
+	CollisionInfo info;
+
+	if (method1 == CollisionMethod::AABB && method2 == CollisionMethod::AABB)
+	{
+		info = AABBtoAABB(static_cast<AABB&>(*collisionComponent1.collider), static_cast<AABB&>(*collisionComponent2.collider));
+	}
+	else
+	{
+		info = POLYtoPOLY(*collisionComponent1.collider, *collisionComponent2.collider);
+	}
+
+	registry.transforms[entity1ID].pos.x += info.mtv.x / 2;
+	registry.transforms[entity1ID].pos.y += info.mtv.y / 2;
+	registry.collisionComponents[entity1ID].collider->AddPosition(Vector2(info.mtv.x / 2, info.mtv.y / 2));
+
+	registry.transforms[entity2ID].pos.x -= info.mtv.x / 2;
+	registry.transforms[entity2ID].pos.y -= info.mtv.y / 2;
+	registry.collisionComponents[entity2ID].collider->AddPosition(Vector2(-(info.mtv.x / 2), -(info.mtv.y / 2)));
 	*/
-	//printf("x: %f y: %f\n", info.mtv.x, info.mtv.y);
 
-	CollisionInfo info = IsCollidingSAT(*registry.collisionComponents[0].collider, *registry.collisionComponents[1].collider);
+	// Less but still naive approach
+	for (auto& [entity1ID, collisionComponent1] : registry.collisionComponents)
+	{
+		for (auto& [entity2ID, collisionComponent2] : registry.collisionComponents)
+		{
+			// We can skip if it's the same entity
+			if (entity1ID == entity2ID)
+				continue;
 
+			CollisionMethod method1 = collisionComponent1.collider->GetCollisionMethod();
+			CollisionMethod method2 = collisionComponent2.collider->GetCollisionMethod();
+
+			CollisionInfo info;
+
+			if (method1 == CollisionMethod::AABB && method2 == CollisionMethod::AABB)
+			{
+				info = AABBtoAABB(static_cast<AABB&>(*collisionComponent1.collider), static_cast<AABB&>(*collisionComponent2.collider));
+			}
+			else
+			{
+				info = POLYtoPOLY(*collisionComponent1.collider, *collisionComponent2.collider);
+			}
+			registry.transforms[entity1ID].pos.x += info.mtv.x/2;
+			registry.transforms[entity1ID].pos.y += info.mtv.y/2;
+			registry.collisionComponents[entity1ID].collider->AddPosition(Vector2(info.mtv.x/2, info.mtv.y/2));
+
+			registry.transforms[entity2ID].pos.x -= info.mtv.x / 2;
+			registry.transforms[entity2ID].pos.y -= info.mtv.y / 2;
+			registry.collisionComponents[entity2ID].collider->AddPosition(Vector2(-(info.mtv.x / 2), -(info.mtv.y / 2)));
+
+		}
+	}
 	// Naive approach
 	/*
 	for (EntityID e = 0; e < EntityManager::NumberOfEntities(); e++)

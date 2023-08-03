@@ -29,8 +29,6 @@ private:
 	Window window;
 
 	SDL_Renderer* renderer;
-	Texture* texture1;
-	Texture* texture2;
 
 	double deltaTime;
 

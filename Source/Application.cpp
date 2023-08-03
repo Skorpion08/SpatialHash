@@ -69,9 +69,7 @@ bool Application::LoadMedia()
 	textureManager.Load("resources/smiley.png");
 	textureManager.Load("resources/ktot.png");
 	textureManager.Load("resources/square.png");
-	
-	//manager.CreateEnitity();
-	
+	textureManager.Load("resources/sad block.png");
 
 	return true;
 }
@@ -82,73 +80,59 @@ void Application::MainLoop()
 	
 	SDL_Event e;
 
-	// ECS TEST
-	/*
-	EntityID smiley = entityManager::CreateEnitity();
-	TransformComponent tc{ 0,300,20,-280,1, 0};
-	entityManager::GetRegistry().transforms.insert({ smiley, tc });
-	SDL_Rect dst{ 0,0, 400,400 };
-	SpriteComponent sc{ nullptr, &dst, TextureManager::Load("resources/ktot.png")};
-	entityManager::GetRegistry().sprites.insert({ smiley, sc});
+	EntityID square = entityManager.CreateEnitity();
+	entityManager.AddTransform(square, {100,100});
+	entityManager.AddKinematics(square);
+	SDL_Rect dst1(50, 50, 100, 100);
+	//entityManager.AddSprite(square, nullptr, &dst1, textureManager.Load("resources/square.png"));
+	Polygon obb1;
+	obb1.center = { 100,100 };
+	obb1.vertices.reserve(3);
+	obb1.sides.resize(3);
+	obb1.vertices.emplace_back(100, 50);
+	obb1.vertices.emplace_back(50, 150);
+	obb1.vertices.emplace_back(150, 150);
+	entityManager.GetRegistry().collisionComponents[square].collider = &obb1;
 
-	Vector2 vector(10, 20);
-	Vector2 normal = vector.GetNormal();
-	printf("vector: %f\n", Vector::DotProduct(vector, normal));
-	*/
-	/*
-	EntityID ent = entityManager.CreateEnitity();
-	entityManager.GetRegistry().transforms.emplace(ent, TransformComponent{ 150,150 });
-	auto rect = SDL_Rect{ 0,0,100,100 };
-	entityManager.GetRegistry().sprites.emplace(ent, SpriteComponent{ nullptr, &rect, TextureManager::Load("resources/square.png") });
-	entityManager.GetRegistry().aabbs.emplace(ent, AABB{ &rect });
+	float v = 500.0f;
 
-	for (int i = 0; i < 1000; i++)
-	{
-		entityManager.CreateEnitity();
-	}
+	float a = 500.0f;
 
-	auto rect2 = SDL_Rect{ 0,0,100,100 };
-	EntityID ent2 = entityManager.CreateEnitity();
-	entityManager.GetRegistry().transforms.emplace(ent2, TransformComponent{ 200,200 });
-	entityManager.GetRegistry().sprites.emplace(ent2, SpriteComponent{ nullptr, &rect2, TextureManager::Load("resources/square.png") });
-	entityManager.GetRegistry().aabbs.emplace(ent2, AABB{ &rect2 });
-	*/
-	EntityID poly = entityManager.CreateEnitity();
-	Shape2D shape;
-	shape.center.x = 150;
-	shape.center.y = 150;
-	shape.vertices.reserve(4);
-	shape.sides.resize(4);
-	/* square
-	shape.vertices.push_back(Vector2(100, 100));
-	shape.vertices.push_back(Vector2(100, 200));
-	shape.vertices.push_back(Vector2(200, 200));
-	shape.vertices.push_back(Vector2(200, 100));
-	*/
-	shape.vertices.push_back(Vector2(100, 100));
-	shape.vertices.push_back(Vector2(90, 250));
-	//shape.vertices.push_back(Vector2(200, 200));
-	shape.vertices.push_back(Vector2(200, 100));
-	CollisionComponent comp;
-	comp.collider = &shape;
+	float b = 3;
 
-
-	EntityID poly2 = entityManager.CreateEnitity();
-	Shape2D shape2;
-	shape2.center.x = 150+100;
-	shape2.center.y = 150+100;
-	shape2.vertices.reserve(4);
-	shape2.sides.resize(4);
-	shape2.vertices.push_back(Vector2(110 + 90, 100 + 90));
-	shape2.vertices.push_back(Vector2(100 + 90, 200 + 90));
-	shape2.vertices.push_back(Vector2(200 + 90, 200 + 90));
-	shape2.vertices.push_back(Vector2(200 + 90, 100 + 90));
-	CollisionComponent comp2;
-	comp2.collider = &shape2;
-
-	entityManager.GetRegistry().collisionComponents.insert({ poly, comp });
-	entityManager.GetRegistry().collisionComponents.insert({ poly2, comp2 });
+	EntityID square2 = entityManager.CreateEnitity();
+	entityManager.AddTransform(square2, { 120,100 });
+	entityManager.AddKinematics(square2);
+	SDL_Rect dst2(100, 100, 100, 100);
+	entityManager.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
+	OBB obb2(100, 100, { 120,100 });
 	
+	entityManager.GetRegistry().collisionComponents[square2].collider = &obb2;
+
+	EntityID square3 = entityManager.CreateEnitity();
+	entityManager.AddTransform(square3, { 400,400 });
+	SDL_Rect dst3(100, 100, 100, 100);
+	entityManager.AddSprite(square3, nullptr, &dst3, textureManager.Load("resources/square.png"));
+	AABB aabb1(100, 100, { 400,400 });
+
+	entityManager.GetRegistry().collisionComponents[square3].collider = &aabb1;
+
+	EntityID square4 = entityManager.CreateEnitity();
+	entityManager.AddTransform(square4, { 400,400 });
+	SDL_Rect dst4(100, 100, 100, 100);
+	entityManager.AddSprite(square4, nullptr, &dst4, textureManager.Load("resources/square.png"));
+	AABB aabb2(100, 100, { 400,400 });
+
+	entityManager.GetRegistry().collisionComponents[square4].collider = &aabb2;
+
+	EntityID square5 = entityManager.CreateEnitity();
+	entityManager.AddTransform(square5, { 400,400 });
+	SDL_Rect dst5(100, 100, 100, 100);
+	entityManager.AddSprite(square5, nullptr, &dst5, textureManager.Load("resources/square.png"));
+	AABB aabb3(100, 100, { 400,400 });
+
+	entityManager.GetRegistry().collisionComponents[square5].collider = &aabb3;
+
 	Uint32 lastUpdate = SDL_GetTicks();
 	Uint32 currentUpdate = 0;
 
@@ -162,99 +146,113 @@ void Application::MainLoop()
 				quit = true;
 				break;
 			}
-			/*
-			if (e.type == SDL_KEYDOWN)
-			{
-				entityManager::GetRegistry().transforms[smiley].velY += -80;
-				entityManager::GetRegistry().transforms[smiley].accY += -10;
-				printf("HEY");
-				if (e.key.keysym.sym == SDLK_r)
-				{
-					entityManager::GetRegistry().transforms[smiley].posX = 0;
-					entityManager::GetRegistry().transforms[smiley].posY = 300;
-					entityManager::GetRegistry().transforms[smiley].velX = 20;
-					entityManager::GetRegistry().transforms[smiley].velY = -280;
-					entityManager::GetRegistry().transforms[smiley].accX = 1;
-					entityManager::GetRegistry().transforms[smiley].accY = 0;
-				}
-			}
-			*/
-			/*
-			if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+			else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
 			{
 				if (e.key.keysym.sym == SDLK_a)
-					entityManager.GetRegistry().transforms[ent].velX = -200;
+				{
+					entityManager.GetRegistry().kinematics[square].vel.x += -v;
+				}
 				else if (e.key.keysym.sym == SDLK_d)
-					entityManager.GetRegistry().transforms[ent].velX = 200;
+				{
+					entityManager.GetRegistry().kinematics[square].vel.x += v;
+				}
 				else if (e.key.keysym.sym == SDLK_w)
-					entityManager.GetRegistry().transforms[ent].velY = -200;
+				{
+					entityManager.GetRegistry().kinematics[square].vel.y += -v;
+				}
 				else if (e.key.keysym.sym == SDLK_s)
-					entityManager.GetRegistry().transforms[ent].velY = 200;
+				{
+					entityManager.GetRegistry().kinematics[square].vel.y += v;
+				}
+				else if (e.key.keysym.sym == SDLK_q)
+				{
+					entityManager.GetRegistry().kinematics[square].angularVel = -b;
+				}
+				else if (e.key.keysym.sym == SDLK_e)
+				{
+					entityManager.GetRegistry().kinematics[square].angularVel = b;
+				}
+				else if (e.key.keysym.sym == SDLK_LEFT)
+				{
+					entityManager.GetRegistry().kinematics[square2].vel.x += -a;
+				}
+				else if (e.key.keysym.sym == SDLK_RIGHT)
+				{
+					entityManager.GetRegistry().kinematics[square2].vel.x += a;
+				}
+				else if (e.key.keysym.sym == SDLK_UP)
+				{
+					entityManager.GetRegistry().kinematics[square2].vel.y += -a;
+				}
+				else if (e.key.keysym.sym == SDLK_DOWN)
+				{
+					entityManager.GetRegistry().kinematics[square2].vel.y += a;
+				}
+				else if (e.key.keysym.sym == SDLK_o)
+				{
+					entityManager.GetRegistry().kinematics[square2].angularVel = -b;
+				}
+				else if (e.key.keysym.sym == SDLK_p)
+				{
+					entityManager.GetRegistry().kinematics[square2].angularVel = b;
+				}
 			}
 			else if (e.type == SDL_KEYUP && e.key.repeat == 0)
 			{
 				if (e.key.keysym.sym == SDLK_a)
-					entityManager.GetRegistry().transforms[ent].velX = 0;
+				{
+					entityManager.GetRegistry().kinematics[square].vel.x -= -v;
+				}
 				else if (e.key.keysym.sym == SDLK_d)
-					entityManager.GetRegistry().transforms[ent].velX = 0;
+				{
+					entityManager.GetRegistry().kinematics[square].vel.x -= v;
+				}
 				else if (e.key.keysym.sym == SDLK_w)
-					entityManager.GetRegistry().transforms[ent].velY = 0;
+				{
+					entityManager.GetRegistry().kinematics[square].vel.y -= -v;
+				}
 				else if (e.key.keysym.sym == SDLK_s)
-					entityManager.GetRegistry().transforms[ent].velY = 0;
-			}
-			*/
-			if (e.type == SDL_KEYDOWN)
-			{
-				if(e.key.keysym.sym == SDLK_RIGHT)
-					shape.ApplyRotation(0.1);
+				{
+					entityManager.GetRegistry().kinematics[square].vel.y -= v;
+				}
+				else if (e.key.keysym.sym == SDLK_q)
+				{
+					entityManager.GetRegistry().kinematics[square].angularVel = 0;
+				}
+				else if (e.key.keysym.sym == SDLK_e)
+				{
+					entityManager.GetRegistry().kinematics[square].angularVel = 0;
+				}
 				else if (e.key.keysym.sym == SDLK_LEFT)
-					shape.ApplyRotation(-0.1);
-				if (e.key.keysym.sym == SDLK_a)
 				{
-					shape.center.x += -10;
-					shape.vertices[0].x += -10;
-					shape.vertices[1].x += -10;
-					shape.vertices[2].x += -10;
-					shape.vertices[3].x += -10;
+					entityManager.GetRegistry().kinematics[square2].vel.x -= -a;
 				}
-				if (e.key.keysym.sym == SDLK_d)
+				else if (e.key.keysym.sym == SDLK_RIGHT)
 				{
-					shape.center.x += 10;
-					shape.vertices[0].x += 10;
-					shape.vertices[1].x += 10;
-					shape.vertices[2].x += 10;
-					shape.vertices[3].x += 10;
+					entityManager.GetRegistry().kinematics[square2].vel.x -= a;
 				}
-				if (e.key.keysym.sym == SDLK_w)
+				else if (e.key.keysym.sym == SDLK_UP)
 				{
-					shape.center.y += -10;
-					shape.vertices[0].y += -10;
-					shape.vertices[1].y += -10;
-					shape.vertices[2].y += -10;
-					shape.vertices[3].y += -10;
+					entityManager.GetRegistry().kinematics[square2].vel.y -= -a;
 				}
-				if (e.key.keysym.sym == SDLK_s)
+				else if (e.key.keysym.sym == SDLK_DOWN)
 				{
-					shape.center.y += 10;
-					shape.vertices[0].y += 10;
-					shape.vertices[1].y += 10;
-					shape.vertices[2].y += 10;
-					shape.vertices[3].y += 10;
+					entityManager.GetRegistry().kinematics[square2].vel.y -= a;
 				}
-
-				/*
-				for (auto& vert : shape.vertices)
+				else if (e.key.keysym.sym == SDLK_o)
 				{
-					printf("x: %f y: %f\n", vert.x, vert.y);
+					entityManager.GetRegistry().kinematics[square2].angularVel = 0;
 				}
-				printf("\n");
-				*/
+				else if (e.key.keysym.sym == SDLK_p)
+				{
+					entityManager.GetRegistry().kinematics[square2].angularVel = 0;
+				}
 			}
+			
 		}
 
 		if (quit)
 			break;
-		Uint64 start = SDL_GetPerformanceCounter();
 
 		//Clear screen
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -262,6 +260,7 @@ void Application::MainLoop()
 		
 		currentUpdate = SDL_GetTicks();
 
+		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001f;
 		//printf("deltatime %f\n", deltaTime);
 		transformSystem.Update(deltaTime);
@@ -269,39 +268,32 @@ void Application::MainLoop()
 		collisionSystem.SolveCollisions();
 		spritesSystem.Update();
 		spritesSystem.Render();
-		
-		//shape.ApplyRotation(1*deltaTime);
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		for (int i = 0; i < shape.vertices.size(); i++)
-		{
-			if (i+1 == shape.vertices.size())
-			{
-				SDL_RenderDrawLine(renderer, shape.vertices[i].x, shape.vertices[i].y, shape.vertices[0].x, shape.vertices[0].y);
-				break;
-			}
-			SDL_RenderDrawLine(renderer, shape.vertices[i].x, shape.vertices[i].y, shape.vertices[i+1].x, shape.vertices[i + 1].y);
-		}
-		for (int i = 0; i < shape2.vertices.size(); i++)
-		{
-			if (i + 1 == shape2.vertices.size())
-			{
-				SDL_RenderDrawLine(renderer, shape2.vertices[i].x, shape2.vertices[i].y, shape2.vertices[0].x, shape2.vertices[0].y);
-				break;
-			}
-			SDL_RenderDrawLine(renderer, shape2.vertices[i].x, shape2.vertices[i].y, shape2.vertices[i + 1].x, shape2.vertices[i + 1].y);
-		}
 		
-
+		for (int i = 0; i < obb1.vertices.size(); i++)
+		{
+			if (i + 1 == obb1.vertices.size())
+			{
+				SDL_RenderDrawLine(renderer, obb1.vertices[i].x, obb1.vertices[i].y, obb1.vertices[0].x, obb1.vertices[0].y);
+				break;
+			}
+			SDL_RenderDrawLine(renderer, obb1.vertices[i].x, obb1.vertices[i].y, obb1.vertices[i + 1].x, obb1.vertices[i + 1].y);
+		}
+		/*
+		for (int i = 0; i < obb2.vertices.size(); i++)
+		{
+			if (i + 1 == obb2.vertices.size())
+			{
+				SDL_RenderDrawLine(renderer, obb2.vertices[i].x, obb2.vertices[i].y, obb2.vertices[0].x, obb2.vertices[0].y);
+				break;
+			}
+			SDL_RenderDrawLine(renderer, obb2.vertices[i].x, obb2.vertices[i].y, obb2.vertices[i + 1].x, obb2.vertices[i + 1].y);
+		}
+		*/
 		lastUpdate = currentUpdate;
-		//printf("velocity Y %f\n", entityManager::GetRegistry().transforms[smiley].velY);
 		//Update screen
 		SDL_RenderPresent(renderer);
-
-		Uint64 end = SDL_GetPerformanceCounter();
-		float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
-		//printf("FPS: %f\n", 1.0f / elapsed);
-		
 	}
 }
 

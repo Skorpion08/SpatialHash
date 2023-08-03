@@ -20,9 +20,9 @@ struct Vector2
 
 	inline Vector2 GetNormal()
 	{
-		return Vector2(-y, x).Normalize();
+		return Vector2(-y, x).Normalized();
 	}
-	inline Vector2 Normalize()
+	inline Vector2 Normalized()
 	{
 		float magnitude = this->GetMagnitude();
 		x /= magnitude;
@@ -33,7 +33,22 @@ struct Vector2
 	{
 		return sqrtf(x * x + y * y);
 	}
+
+	inline Vector2 operator -()
+	{
+		return Vector2(-this->x, -this->y);
+	}
 };
+
+inline Vector2 operator + (const Vector2& a, const Vector2& b)
+{
+	return Vector2(a.x + b.x, a.y + b.y);
+}
+
+inline Vector2 operator - (const Vector2& a, const Vector2& b)
+{
+	return Vector2(a.x - b.x, a.y - b.y);
+}
 
 namespace Vector
 {

@@ -12,7 +12,7 @@ public:
 	Texture(SDL_Renderer* _renderer, const std::string& filepath);
 	virtual ~Texture();
 
-	void Render(const SDL_Rect* srcRect, const SDL_Rect* dstRect);
+	void Render(const SDL_Rect* srcRect, const SDL_Rect* dstRect, float angle = 0, const SDL_Point* center = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE);
 
 	void SetRenderer(SDL_Renderer* _renderer);
 
