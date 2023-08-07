@@ -70,7 +70,6 @@ Texture::~Texture()
 
 void Texture::Render(const SDL_Rect* srcRect, const SDL_Rect* dstRect, float angle, const SDL_Point* center, SDL_RendererFlip flip)
 {
-	//SDL_RenderCopy(renderer, _texture, srcRect, dstRect);
 	SDL_RenderCopyEx(renderer, _texture, srcRect, dstRect, angle, center, flip);
 }
 

@@ -30,7 +30,7 @@ struct Transform
 	Transform(Vector2 _pos, float _rotation, Vector2 _scale) : pos(_pos), rotation(_rotation), scale(_scale) {}
 	Vector2 pos;
 	float rotation;
-	Vector2 scale = { 1.0f,1.0f };
+	Vector2 scale;
 };
 
 struct Kinematics
@@ -42,16 +42,20 @@ struct Kinematics
 	float angularAcc;
 };
 
-struct Rigidbody
+struct Rigidbody // All forces are in N
 {
-	float torque;
-	float momentOfInertia;
+	float mass;
+
+	bool enableGravity;
+	float gravityAcc;
+	//float torque;
+	//float momentOfInertia;
 };
 
 struct Collision
 {
-	bool blockCollision;
 	Shape2D* collider;
+	bool blockCollision;
 };
 
 // Holds what components entities use
@@ -61,6 +65,7 @@ struct Registry
 	std::unordered_map<EntityID, Transform> transforms;
 	std::unordered_map<EntityID, Kinematics> kinematics;
 	std::unordered_map<EntityID, Collision> collisionComponents;
+	std::unordered_map<EntityID, Rigidbody> rigidbodies;
 };
 class EntityManager
 {
@@ -84,8 +89,8 @@ public:
 	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
 	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
 	Kinematics* AddKinematics(EntityID entityID, Vector2 vel = { 0,0 }, Vector2 acc = { 0,0 }, float angularVel = 0.0f, float angularAcc = 0.0f);
-	Rigidbody* AddRigidbody(EntityID entityID);
 	Collision* AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision = true);
+	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81);
 
 
 	void DestroyEntity(EntityID entityID);
@@ -100,7 +105,7 @@ public:
 
 private:
 	EntityID nextEntityID;
-	//std::vector<Entity> entities;
+	
 	std::vector<Entity> entities;
 
 	Registry registry;
@@ -111,7 +116,7 @@ private:
 struct SpriteSystem
 {
 	// Update all sprites
-	void Update();
+	void Update(Vector2 cameraPos = { 0,0 });
 
 	void Render();
 };
@@ -136,7 +141,6 @@ struct CollisionSystem
 
 	// Takes in two aabbs
 	CollisionInfo AABBtoAABB(AABB& a, AABB& b);
-	CollisionInfo OBBtoOBB(Shape2D& shapeA, Shape2D& shapeB);
 	CollisionInfo POLYtoPOLY(Shape2D& shapeA, Shape2D& shapeB);
 
 	//CollisionInfo& CIRCLEtoCIRCLE(Circle& a, Circle& b);

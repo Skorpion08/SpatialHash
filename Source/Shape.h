@@ -20,6 +20,11 @@ enum class CollisionMethod
 	AABB
 };
 
+enum class SolvingMethod
+{
+	Impulse,
+};
+
 // It uses something similair to euler angles however it has only one axis of rotation
 struct Shape2D
 {
@@ -38,11 +43,6 @@ struct Shape2D
 
 	Vector2 center;
 
-	// The first vertex must be the top left corner
-	std::vector<Vector2> vertices;
-
-	std::vector<Vector2> sides;
-
 	// Rotation is clockwise
 
 	void ApplyRotation(float angleRadians);
@@ -51,6 +51,11 @@ struct Shape2D
 	inline void SetRotation(float desiredAngle) { ApplyRotation(desiredAngle - angle); }
 
 	virtual void UpdateSideVectors();
+
+	// The first vertex must be the top left corner (for AABB's)
+	std::vector<Vector2> vertices;
+
+	std::vector<Vector2> sides;
 };
 
 struct Polygon : Shape2D // rewrite this to use operator overloading
@@ -89,15 +94,5 @@ struct AABB : OBB
 		h *= addScale.y + 1;
 	}
 
-	// We only need to check two sides for rectangles
-	void UpdateSideVectors() override;
-
-	virtual CollisionMethod GetCollisionMethod() override { return CollisionMethod::AABB; }
+	CollisionMethod GetCollisionMethod() override { return CollisionMethod::AABB; }
 };
-
-/*
-struct OBB_DEPRECATED : AABB
-{
-	void AddRotation(float addRotation) override;
-};
-*/

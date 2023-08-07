@@ -97,29 +97,7 @@ void OBB::UpdateSideVectors()
 
 AABB::AABB(float width, float height, Vector2 position) : OBB(width, height, position)
 {
-	/*
-	// Calculates the top left corner, assumes the position is centered
+	// Top left corner initialization
 	x = position.x - width / 2.0f;
 	y = position.y - height / 2.0f;
-
-	w = width;
-	h = height;
-
-	vertices.reserve(4);
-	sides.resize(2);
-
-	vertices.emplace_back(x,   y);
-	vertices.emplace_back(x,   y+h);
-	vertices.emplace_back(x+w, y+h);
-	vertices.emplace_back(x+w, y);
-	*/
-}
-
-void AABB::UpdateSideVectors()
-{
-	// Loop through two sides (it's all we need for a rectangle)
-	for (uint8_t i = 0; i < 2; ++i)
-	{
-		sides[i] = Vector2(vertices[i], vertices[i + 1]);
-	}
 }
