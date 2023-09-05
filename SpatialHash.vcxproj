@@ -78,9 +78,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>Intermediate\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>Intermediate\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -151,6 +155,7 @@
   <ItemGroup>
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\EntityManager.cpp" />
+    <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Shape.cpp" />
     <ClCompile Include="Source\SpatialHashMap.cpp" />
@@ -159,6 +164,7 @@
     <ClCompile Include="Source\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Shape.h" />
     <ClInclude Include="Source\Vector.h" />
     <ClInclude Include="Source\Application.h" />

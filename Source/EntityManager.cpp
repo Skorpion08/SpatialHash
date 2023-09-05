@@ -1,14 +1,14 @@
 #include "EntityManager.h"
 
-EntityID EntityManager::CreateEnitity()
+EntityID EntityManager::CreateEnitity(EntityMovability movability)
 {
-	entities.emplace_back(true);
+	entities.emplace_back(Entity(nextEntityID, true, movability));
 	return nextEntityID++;
 }
 
 Sprite* EntityManager::AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture)
 {
-	if (EntityIDValid(entityID))
+	if (EntityValid(entityID))
 	{
 		GetInstance().GetRegistry().sprites.emplace(entityID, Sprite(src, dst, texture));
 		return &GetInstance().GetRegistry().sprites[entityID];
@@ -18,7 +18,7 @@ Sprite* EntityManager::AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst
 
 Transform* EntityManager::AddTransform(EntityID entityID, Vector2 position, float rotation, Vector2 scale)
 {
-	if (EntityIDValid(entityID))
+	if (EntityValid(entityID))
 	{
 		GetInstance().GetRegistry().transforms.emplace(entityID, Transform(position, rotation, scale));
 		return &GetInstance().GetRegistry().transforms[entityID];
@@ -28,7 +28,7 @@ Transform* EntityManager::AddTransform(EntityID entityID, Vector2 position, floa
 
 Kinematics* EntityManager::AddKinematics(EntityID entityID, Vector2 vel, Vector2 acc, float angularVel, float angularAcc)
 {
-	if (EntityIDValid(entityID))
+	if (EntityValid(entityID))
 	{
 		GetInstance().GetRegistry().kinematics.emplace(entityID, Kinematics(vel, acc, angularVel, angularAcc));
 		return &GetInstance().GetRegistry().kinematics[entityID];
@@ -38,7 +38,7 @@ Kinematics* EntityManager::AddKinematics(EntityID entityID, Vector2 vel, Vector2
 
 Collision* EntityManager::AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision)
 {
-	if (EntityIDValid(entityID))
+	if (EntityValid(entityID))
 	{
 		GetInstance().GetRegistry().collisionComponents.emplace(entityID, Collision(collider, blockCollision));
 		return &GetInstance().GetRegistry().collisionComponents[entityID];
@@ -46,11 +46,11 @@ Collision* EntityManager::AddCollision(EntityID entityID, Shape2D* collider, boo
 	return nullptr;
 }
 
-Rigidbody* EntityManager::AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc)
+Rigidbody* EntityManager::AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc, float elasticity, float staticFriction, float dynamicFriction)
 {
-	if (EntityIDValid(entityID))
+	if (EntityValid(entityID))
 	{
-		GetInstance().GetRegistry().rigidbodies.emplace(entityID, Rigidbody(mass, enableGravity, gravityAcc));
+		GetInstance().GetRegistry().rigidbodies.emplace(entityID, Rigidbody(mass, enableGravity, gravityAcc, elasticity, staticFriction, dynamicFriction));
 		return &GetInstance().GetRegistry().rigidbodies[entityID];
 	}
 	return nullptr;
@@ -58,8 +58,7 @@ Rigidbody* EntityManager::AddRigidbody(EntityID entityID, float mass, bool enabl
 
 void EntityManager::DestroyEntity(EntityID entityID)
 {
-	entities[entityID] = false;
-
+	entities[entityID].active = false;
 	// deactivate other components
 	registry.sprites.erase(entityID);
 	registry.transforms.erase(entityID);
@@ -115,34 +114,43 @@ void TransformSystem::Update(double deltaTime)
 	
 	for (auto& [entityID, kinematics] : registry.kinematics)
 	{
+		if (manager.GetEntities()[entityID].movability == Static)
+			continue;
+
 		// Apply kinematics and motion
 		auto& transform = registry.transforms[entityID];
+
+		Vector2 actualAcc = kinematics.acc;
+		// Apply gravity
+		if (registry.rigidbodies.contains(entityID))
+		{
+			auto& rb = registry.rigidbodies.at(entityID);
+			if (registry.rigidbodies[entityID].enableGravity == true)
+			{
+				float gravityForce = rb.mass * rb.gravityAcc;
+				rb.resultantForce.y += gravityForce;
+			}
+			rb.resultantForce += rb.constForces;
+			actualAcc += rb.resultantForce / rb.mass;
+			rb.resultantForce = { 0,0 };
+		}
+		// Apply acceleration
+		kinematics.vel += actualAcc * deltaTime;
 		// Apply velocity
-		transform.pos.x += kinematics.vel.x * deltaTime;
-		transform.pos.y += kinematics.vel.y * deltaTime;
+		transform.pos += kinematics.vel * deltaTime;
 
 		// Move the collision component
 		if (registry.collisionComponents.contains(entityID))
-			registry.collisionComponents[entityID].collider->AddPosition(Vector2(kinematics.vel.x * deltaTime, kinematics.vel.y*deltaTime));
+			registry.collisionComponents[entityID].collider->AddPosition(kinematics.vel * deltaTime);
 
-		// Apply acceleration
-		kinematics.vel.x += kinematics.acc.x * deltaTime;
-		kinematics.vel.y += kinematics.acc.y * deltaTime;
-
-		if (registry.rigidbodies.contains(entityID) && registry.rigidbodies[entityID].enableGravity == true)
-		{
-			float gravityForce = registry.rigidbodies[entityID].mass * registry.rigidbodies[entityID].gravityAcc;
-			kinematics.acc.y = gravityForce / registry.rigidbodies[entityID].mass;
-		}
+		kinematics.angularVel += kinematics.angularAcc * deltaTime;
 
 		// Apply angular velocity and acceleration
 		transform.rotation += kinematics.angularVel * deltaTime;
 
-		// Move the collision component
+		// Rotate the collision component
 		if (registry.collisionComponents.contains(entityID))
 			registry.collisionComponents[entityID].collider->AddRotation(kinematics.angularVel * deltaTime);
-
-		kinematics.angularVel += kinematics.angularAcc * deltaTime;
 	}
 }
 
@@ -164,15 +172,6 @@ void CollisionSystem::Update()
 	auto& manager = EntityManager::GetInstance();
 	auto& registry = manager.GetRegistry();
 
-	/*
-	for (auto& [entityID, aabb] : registry.aabbs)
-	{
-		// Center the aabb
-		auto& transform = registry.transforms[entityID];
-		aabb.boundingBox->x = transform.posX - aabb.boundingBox->w / 2;
-		aabb.boundingBox->y = transform.posY - aabb.boundingBox->h / 2;
-	}
-	*/
 	for (auto& [entityID, CollisionComponent] : registry.collisionComponents)
 	{
 		if (registry.transforms.contains(entityID))
@@ -337,7 +336,7 @@ void CollisionSystem::SolveCollisions()
 		for (auto& [entity2ID, collisionComponent2] : registry.collisionComponents)
 		{
 			// We can skip if it's the same entity
-			if (entity1ID == entity2ID)
+			if (entity1ID == entity2ID || (entities.at(entity1ID).movability == Static && entities.at(entity2ID).movability == Static))
 				continue;
 
 			CollisionMethod method1 = collisionComponent1.collider->GetCollisionMethod();
@@ -353,91 +352,110 @@ void CollisionSystem::SolveCollisions()
 			{
 				info = POLYtoPOLY(*collisionComponent1.collider, *collisionComponent2.collider);
 			}
-			// This code's a mess
-			/*
-			if (registry.kinematics.contains(entity1ID))
-			{
-				registry.transforms[entity1ID].pos.x += info.mtv.x / 2;
-				registry.transforms[entity1ID].pos.y += info.mtv.y / 2;
-				registry.collisionComponents[entity1ID].collider->AddPosition(Vector2(info.mtv.x / 2, info.mtv.y / 2));
-
-				if (registry.kinematics.contains(entity2ID))
-				{
-					registry.transforms[entity2ID].pos.x -= info.mtv.x / 2;
-					registry.transforms[entity2ID].pos.y -= info.mtv.y / 2;
-					registry.collisionComponents[entity2ID].collider->AddPosition(Vector2(-(info.mtv.x / 2), -(info.mtv.y / 2)));
-				}
-				else
-				{
-					registry.transforms[entity1ID].pos.x += info.mtv.x / 2;
-					registry.transforms[entity1ID].pos.y += info.mtv.y / 2;
-					registry.collisionComponents[entity1ID].collider->AddPosition(Vector2(info.mtv.x / 2, info.mtv.y / 2));
-				}
-			}
-			else if (registry.kinematics.contains(entity2ID))
-			{
-				registry.transforms[entity2ID].pos.x -= info.mtv.x / 2;
-				registry.transforms[entity2ID].pos.y -= info.mtv.y / 2;
-				registry.collisionComponents[entity2ID].collider->AddPosition(Vector2(-(info.mtv.x / 2), -(info.mtv.y / 2)));
-
-				if (registry.kinematics.contains(entity1ID))
-				{
-					registry.transforms[entity1ID].pos.x += info.mtv.x / 2;
-					registry.transforms[entity1ID].pos.y += info.mtv.y / 2;
-					registry.collisionComponents[entity1ID].collider->AddPosition(Vector2(info.mtv.x / 2, info.mtv.y / 2));
-				}
-				else
-				{
-					registry.transforms[entity2ID].pos.x -= info.mtv.x / 2;
-					registry.transforms[entity2ID].pos.y -= info.mtv.y / 2;
-					registry.collisionComponents[entity2ID].collider->AddPosition(Vector2(-(info.mtv.x / 2), -(info.mtv.y / 2)));
-				}
-			}
-			else
-			{
-				registry.transforms[entity1ID].pos.x += info.mtv.x / 2;
-				registry.transforms[entity1ID].pos.y += info.mtv.y / 2;
-				registry.collisionComponents[entity1ID].collider->AddPosition(Vector2(info.mtv.x / 2, info.mtv.y / 2));
-
-				registry.transforms[entity2ID].pos.x -= info.mtv.x / 2;
-				registry.transforms[entity2ID].pos.y -= info.mtv.y / 2;
-				registry.collisionComponents[entity2ID].collider->AddPosition(Vector2(-(info.mtv.x / 2), -(info.mtv.y / 2)));
-			}
-			*/
-
+			
 			if (collisionComponent1.blockCollision && collisionComponent2.blockCollision && info.overlap) // We can solve the collision
 			{
+				Vector2 displacement1;
+				Vector2 displacement2;
+				
+				registry.transforms[entity1ID].pos += info.mtv / 2;
+				displacement1 += info.mtv / 2;
+				collisionComponent1.collider->AddPosition(info.mtv / 2);
+
+				registry.transforms[entity2ID].pos -= info.mtv / 2;
+				displacement2 -= info.mtv / 2;
+				collisionComponent2.collider->AddPosition(-info.mtv / 2);
+
+				if (manager.GetEntities()[entity1ID].movability == Static)
+				{
+					registry.transforms[entity1ID].pos -= info.mtv / 2;
+					displacement1 -= info.mtv / 2;
+					collisionComponent1.collider->AddPosition(-info.mtv);
+
+					registry.transforms[entity2ID].pos -= info.mtv / 2;
+					displacement2 -= info.mtv / 2;
+					collisionComponent2.collider->AddPosition(-info.mtv);
+				}
+				if (manager.GetEntities()[entity2ID].movability == Static)
+				{
+					registry.transforms[entity2ID].pos += info.mtv / 2;
+					displacement2 += info.mtv / 2;
+					collisionComponent2.collider->AddPosition(info.mtv / 2);
+
+					registry.transforms[entity1ID].pos += info.mtv / 2;
+					displacement1 += info.mtv / 2;
+					collisionComponent1.collider->AddPosition(info.mtv);
+				}
+
 				if (registry.rigidbodies.contains(entity1ID) && registry.rigidbodies.contains(entity2ID))
 				{
+					// If there's an overlap but no mtv it means shapes barely stick to each other
+					if (info.mtv.x == 0 && info.mtv.y == 0)
+						continue;
 
 					Rigidbody& rb1 = registry.rigidbodies[entity1ID];
 					Rigidbody& rb2 = registry.rigidbodies[entity2ID];
 
+					// We need to calculate the velocity at the time of collision and not at the time of overlaps
+
 					Vector2 relativeVelVector = registry.kinematics[entity2ID].vel - registry.kinematics[entity1ID].vel;
-
 					Vector2 normal = Vector::GetNormalized(info.mtv);
-
-					float relativeVel = Vector::DotProduct(relativeVelVector, normal);
+					//Vector2 normal = Vector::GetNormalized(info.mtv);
 					
-					// Calculate impulse
-					float impulseScalar = -(1 + 1 /* + (rb1.elasticity + rb2.elasticity) / 2*/) *
-						relativeVel /
-						(1.0f / rb1.mass + 1.0f / rb2.mass);
+					float relativeVel = Vector::DotProduct(relativeVelVector, normal);
 
-					//printf("scalar: %f\n", impulseScalar);
+					if (relativeVel > 0)
+					{
+						//printf("relative vel: %f\n", relativeVel);
+						float invMass1, invMass2;
+						if (manager.GetEntities()[entity1ID].movability == Dynamic)
+							invMass1 = 1.0 / rb1.mass;
+						else
+							invMass1 = 0;
 
-					Vector2 impulse = normal * impulseScalar;
-					// Apply impulse to kinematics
-					registry.kinematics[entity1ID].vel -= impulse * (1.0f / rb1.mass);
-					registry.kinematics[entity2ID].vel += impulse * (1.0f / rb2.mass);
+						if (manager.GetEntities()[entity2ID].movability == Dynamic)
+							invMass2 = 1.0 / rb2.mass;
+						else
+							invMass2 = 0;
+
+						// Calculate impulse
+						float impulseScalar = -(1 +  (rb1.elasticity + rb2.elasticity) / 2) *
+							relativeVel /
+							(invMass1 + invMass2);
+						Vector2 impulse = normal * impulseScalar;
+
+						// Apply impulse to kinematics
+						registry.kinematics[entity1ID].vel -= impulse * invMass1;
+						registry.kinematics[entity2ID].vel += impulse * invMass2;
+
+						relativeVelVector = registry.kinematics[entity2ID].vel - registry.kinematics[entity1ID].vel;
+
+						relativeVel = Vector::DotProduct(relativeVelVector, normal);
+
+						// Apply friction
+						float sf = (rb1.staticFriction + rb2.staticFriction)/2;
+						float df = (rb1.dynamicFriction + rb2.dynamicFriction)/2;
+						Vector2 tangent = Vector::GetNormalized(relativeVelVector - (normal * relativeVel));
+						float frictionScalar = -Vector::DotProduct(relativeVelVector, tangent) / (invMass1 + invMass2);
+
+						Vector2 frictionImpulse = frictionScalar * tangent;
+
+						
+						
+						if (abs(frictionScalar) < abs(impulseScalar) * sf)
+						{
+							frictionImpulse = frictionScalar * tangent;
+						}
+						else
+						{
+							frictionImpulse = impulseScalar * tangent * df;
+						}
+						
+						// Apply friction impulse to kinematics
+						registry.kinematics[entity1ID].vel -= frictionImpulse * invMass1;
+						registry.kinematics[entity2ID].vel += frictionImpulse * invMass2;
+					}
 				}
-				registry.transforms[entity1ID].pos.x += info.mtv.x / 2;
-				registry.transforms[entity1ID].pos.y += info.mtv.y / 2;
-				collisionComponent1.collider->AddPosition(Vector2(info.mtv.x / 2, info.mtv.y / 2));
-
-				registry.transforms[entity2ID].pos.x -= info.mtv.x / 2;
-				registry.transforms[entity2ID].pos.y -= info.mtv.y / 2;
-				collisionComponent2.collider->AddPosition(Vector2(-(info.mtv.x / 2), -(info.mtv.y / 2)));
 			}
 		}
 	}

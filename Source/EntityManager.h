@@ -4,17 +4,57 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "TextureManager.h"
 #include "Vector.h"
 #include "Shape.h"
 
 using EntityID = size_t;
+using ComponentID = uint8_t;
+using ArchetypeID = uint8_t;
 
-// Entity is a bool to indicate whether it is active or not
-using Entity = bool;
+using Type = std::vector<ComponentID>;
+
+inline ComponentID TransformID = 0;
+inline ComponentID SpriteID = 1;
+inline ComponentID KinematicsID = 2;
+inline ComponentID RigidbodyID = 3;
+
+struct Archetype
+{
+	ArchetypeID id;
+	Type type;
+};
+
+using ArchetypeSet = std::unordered_set<ArchetypeID>;
+
+struct Column
+{
+	void* elements;
+	size_t element_size;
+	size_t m_count;
+};
+
+
+enum EntityMovability
+{
+	Dynamic,
+	Static
+};
+
+struct Entity
+{
+	EntityID id;
+	bool active;
+	EntityMovability movability;
+};
 
 // Components:
+
+struct Component
+{
+};
 
 struct Sprite
 {
@@ -48,6 +88,14 @@ struct Rigidbody // All forces are in N
 
 	bool enableGravity;
 	float gravityAcc;
+
+	float elasticity;
+
+	float staticFriction;
+	float dynamicFriction;
+
+	Vector2 resultantForce;
+	Vector2 constForces;
 	//float torque;
 	//float momentOfInertia;
 };
@@ -84,18 +132,18 @@ public:
 	}
 
 	// Returns its ID
-	EntityID CreateEnitity();
+	EntityID CreateEnitity(EntityMovability movability = Dynamic);
 
 	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
 	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
 	Kinematics* AddKinematics(EntityID entityID, Vector2 vel = { 0,0 }, Vector2 acc = { 0,0 }, float angularVel = 0.0f, float angularAcc = 0.0f);
 	Collision* AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision = true);
-	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81);
+	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81, float elasticity = 0.6, float staticFriction = 0.6, float dynamicFriction = 0.5);
 
 
 	void DestroyEntity(EntityID entityID);
 
-	inline bool EntityIDValid(EntityID entityID) { return entityID >= 0 && entityID < NumberOfEntities();}
+	inline bool EntityValid(EntityID entityID) { return entityID >= 0 && entityID < NumberOfEntities() && GetEntities()[entityID].active;}
 
 	inline size_t NumberOfEntities() { return entities.size(); }
 
@@ -107,7 +155,6 @@ private:
 	EntityID nextEntityID;
 	
 	std::vector<Entity> entities;
-
 	Registry registry;
 };
 

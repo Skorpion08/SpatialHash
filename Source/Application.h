@@ -4,6 +4,8 @@
 #include <SDL_image.h>
 
 #include <vector>
+#include <stdexcept>
+#include <iostream>
 
 #include "Window.h"
 #include "TextureManager.h"
