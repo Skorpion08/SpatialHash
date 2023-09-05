@@ -1,5 +1,5 @@
 #include <cstdio>
-
+#include <chrono>
 #include "Application.h"
 #include "Vector.h"
 #include "Shape.h"
@@ -192,13 +192,9 @@ void Application::MainLoop()
 	entityManager.AddCollision(border, &borderaa);
 	entityManager.AddRigidbody(border, 0, false);
 
-	Column columnTransform;
-	Transform t[4]{ Transform(10, 30), Transform(20, 50), Transform(30, 0), Transform(2, 1) };
-	columnTransform.elements = t;
-	columnTransform.m_count = 4;
-	columnTransform.element_size = sizeof(Transform);
-	std::cout << static_cast<Transform*>(columnTransform.elements)[0].pos.x;
-
+	Column column(typeid(Transform), sizeof(Transform), 4);
+	Transform t[4];
+	column.elements = t;
 	/*
 	std::vector<SDL_Rect> s;
 	std::vector<AABB> c;

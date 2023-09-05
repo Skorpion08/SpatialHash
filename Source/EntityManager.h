@@ -5,14 +5,16 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <typeinfo>
+#include <typeindex>
 
 #include "TextureManager.h"
 #include "Vector.h"
 #include "Shape.h"
 
 using EntityID = size_t;
-using ComponentID = uint8_t;
-using ArchetypeID = uint8_t;
+using ComponentID = EntityID;
+using ArchetypeID = EntityID;
 
 using Type = std::vector<ComponentID>;
 
@@ -21,20 +23,8 @@ inline ComponentID SpriteID = 1;
 inline ComponentID KinematicsID = 2;
 inline ComponentID RigidbodyID = 3;
 
-struct Archetype
-{
-	ArchetypeID id;
-	Type type;
-};
 
-using ArchetypeSet = std::unordered_set<ArchetypeID>;
 
-struct Column
-{
-	void* elements;
-	size_t element_size;
-	size_t m_count;
-};
 
 
 enum EntityMovability
@@ -51,10 +41,41 @@ struct Entity
 };
 
 // Components:
-
-struct Component
+struct Column
 {
+	Column(const std::type_info& t, size_t size, size_t count) : type(t), element_size(size), m_count(count) {
+		elements = nullptr;
+	}
+
+	void* elements;
+	const std::type_info& type;
+	size_t element_size;
+	size_t m_count;
+
+	template <typename T>
+	T* getComponent()
+	{
+		//printf("%s %s",type->name(), typeid(T).name());
+		if (typeid(T) == type)
+		{
+			return static_cast<T*>(elements);
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
 };
+
+struct Archetype
+{
+	ArchetypeID id;
+	Type type;
+	std::vector<Column> table;
+};
+
+using ArchetypeSet = std::unordered_set<ArchetypeID>;
+
 
 struct Sprite
 {
@@ -133,6 +154,12 @@ public:
 
 	// Returns its ID
 	EntityID CreateEnitity(EntityMovability movability = Dynamic);
+
+	template <typename T, typename... Args>
+	T* Add(Args&&... args)
+	{
+		registry.sprites.emplace(T(std::forward<Args>(args)...));
+	}
 
 	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
 	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
