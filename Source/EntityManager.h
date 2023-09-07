@@ -53,17 +53,14 @@ struct Column
 	size_t m_count;
 
 	template <typename T>
-	T* getComponent()
+	T* getComponent(size_t row)
 	{
 		//printf("%s %s",type->name(), typeid(T).name());
 		if (typeid(T) == type)
 		{
-			return static_cast<T*>(elements);
+			return static_cast<T*>(elements) + row;
 		}
-		else
-		{
-			return nullptr;
-		}
+		return nullptr;
 	}
 };
 

@@ -195,6 +195,13 @@ void Application::MainLoop()
 	Column column(typeid(Transform), sizeof(Transform), 4);
 	Transform t[4];
 	column.elements = t;
+	Transform* ptr = column.getComponent<Transform>(1);
+	ptr->pos.x = 10;
+	for (auto tr : t)
+	{
+		std::cout << tr.pos.x << '\n';
+	}
+
 	/*
 	std::vector<SDL_Rect> s;
 	std::vector<AABB> c;
