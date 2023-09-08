@@ -43,22 +43,34 @@ struct Entity
 // Components:
 struct Column
 {
-	Column(const std::type_info& t, size_t size, size_t count) : type(t), element_size(size), m_count(count) {
-		elements = nullptr;
-	}
+	Column(const std::type_info& t, size_t size, size_t count) : type(t), element_size(size), m_count(count) {}
 
-	void* elements;
+	std::vector<uint8_t> elements; // We use a uint8_t as a buffer for memory
 	const std::type_info& type;
 	size_t element_size;
 	size_t m_count;
 
 	template <typename T>
-	T* getComponent(size_t row)
+	bool Insert(T&& values)
+	{
+		printf("\t%d %d\n", m_count, elements.size());
+		if (typeid(T) == type)
+		{
+			elements.resize(elements.size() + element_size);
+			T* elementPtr = reinterpret_cast<T*>(elements.data() + m_count++*element_size);
+			*elementPtr = values;
+			return true;
+		}
+		return false;
+	}
+
+	template <typename T>
+	T* Get(size_t row)
 	{
 		//printf("%s %s",type->name(), typeid(T).name());
 		if (typeid(T) == type)
 		{
-			return static_cast<T*>(elements) + row;
+			return reinterpret_cast<T*>(elements.data() + row * element_size);
 		}
 		return nullptr;
 	}
@@ -153,16 +165,17 @@ public:
 	EntityID CreateEnitity(EntityMovability movability = Dynamic);
 
 	template <typename T, typename... Args>
-	T* Add(Args&&... args)
+	T* Add(EntityID entityID, Args&&... args)
 	{
-		registry.sprites.emplace(T(std::forward<Args>(args)...));
+		registry.sprites.emplace(entityID, T(std::forward<Args>(args)...));
+		return &GetInstance().GetRegistry().sprites[entityID];
 	}
 
 	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
 	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
 	Kinematics* AddKinematics(EntityID entityID, Vector2 vel = { 0,0 }, Vector2 acc = { 0,0 }, float angularVel = 0.0f, float angularAcc = 0.0f);
 	Collision* AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision = true);
-	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81, float elasticity = 0.6, float staticFriction = 0.6, float dynamicFriction = 0.5);
+	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81, float elasticity = 0.6, float staticFriction = 0.4, float dynamicFriction = 0.3);
 
 
 	void DestroyEntity(EntityID entityID);

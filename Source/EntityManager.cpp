@@ -435,6 +435,7 @@ void CollisionSystem::SolveCollisions()
 						// Apply friction
 						float sf = (rb1.staticFriction + rb2.staticFriction)/2;
 						float df = (rb1.dynamicFriction + rb2.dynamicFriction)/2;
+
 						Vector2 tangent = Vector::GetNormalized(relativeVelVector - (normal * relativeVel));
 						float frictionScalar = -Vector::DotProduct(relativeVelVector, tangent) / (invMass1 + invMass2);
 

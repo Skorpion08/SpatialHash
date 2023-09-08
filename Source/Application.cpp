@@ -80,24 +80,6 @@ void Application::MainLoop()
 	
 	SDL_Event e;
 
-	
-	EntityID triangle = entityManager.CreateEnitity();
-	/*
-	entityManager.AddTransform(triangle, {100,100});
-	entityManager.AddKinematics(triangle);
-	SDL_Rect dst1(50, 50, 100, 100);
-	//entityManager.AddSprite(triangle, nullptr, &dst1, textureManager.Load("resources/triangle.png"));
-	Polygon obb1;
-	obb1.center = { 100,100 };
-	obb1.vertices.reserve(3);
-	obb1.sides.resize(3);
-	obb1.vertices.emplace_back(100, 50);
-	obb1.vertices.emplace_back(50, 150);
-	obb1.vertices.emplace_back(150, 150);
-
-	//entityManager.AddRigidbody(triangle, 10, false);
-	entityManager.AddCollision(triangle, &obb1);
-	*/
 	float v = 500.0f;
 
 	float ad = 1000.0f;
@@ -187,19 +169,25 @@ void Application::MainLoop()
 	EntityID border = entityManager.CreateEnitity(Static);
 	entityManager.AddTransform(border, { 50000, 700 });
 	SDL_Rect bordeah = { 0,0,100,10000 };
-	entityManager.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
+	//entityManager.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
 	AABB borderaa(100, 10000);
 	entityManager.AddCollision(border, &borderaa);
 	entityManager.AddRigidbody(border, 0, false);
 
-	Column column(typeid(Transform), sizeof(Transform), 4);
-	Transform t[4];
-	column.elements = t;
-	Transform* ptr = column.getComponent<Transform>(1);
-	ptr->pos.x = 10;
-	for (auto tr : t)
+	entityManager.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
+
+	Column column(typeid(Transform), sizeof(Transform), 0);
+	column.Insert<Transform>(Transform());
+	column.Insert<Transform>(Transform());
+	column.Insert<Transform>(Transform());
+	column.Insert<Transform>(Transform());
+	column.Get<Transform>(1)->pos.x = 10;
+
+	column.Get<Transform>(2)->pos.x = 205;
+	printf("column %d\n\n", column.elements.size());
+	for (int i = 0; i < column.elements.size()/column.element_size; ++i)
 	{
-		std::cout << tr.pos.x << '\n';
+		printf("%f\n", column.Get<Transform>(i)->pos.x);
 	}
 
 	/*
@@ -243,31 +231,7 @@ void Application::MainLoop()
 			}
 			else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
 			{
-				if (e.key.keysym.sym == SDLK_a)
-				{
-					entityManager.GetRegistry().kinematics[triangle].vel.x += -v;
-				}
-				else if (e.key.keysym.sym == SDLK_d)
-				{
-					entityManager.GetRegistry().kinematics[triangle].vel.x += v;
-				}
-				else if (e.key.keysym.sym == SDLK_w)
-				{
-					entityManager.GetRegistry().kinematics[triangle].vel.y += -v;
-				}
-				else if (e.key.keysym.sym == SDLK_s)
-				{
-					entityManager.GetRegistry().kinematics[triangle].vel.y += v;
-				}
-				else if (e.key.keysym.sym == SDLK_q)
-				{
-					entityManager.GetRegistry().kinematics[triangle].angularVel = -b;
-				}
-				else if (e.key.keysym.sym == SDLK_e)
-				{
-					entityManager.GetRegistry().kinematics[triangle].angularVel = b;
-				}
-				else if (e.key.keysym.sym == SDLK_LEFT)
+				if (e.key.keysym.sym == SDLK_LEFT)
 				{
 					entityManager.GetRegistry().kinematics[square2].acc.x += -v;
 					keyPressed = true;
@@ -298,31 +262,7 @@ void Application::MainLoop()
 			}
 			else if (e.type == SDL_KEYUP && e.key.repeat == 0)
 			{
-				if (e.key.keysym.sym == SDLK_a)
-				{
-					entityManager.GetRegistry().kinematics[triangle].vel.x -= -v;
-				}
-				else if (e.key.keysym.sym == SDLK_d)
-				{
-					entityManager.GetRegistry().kinematics[triangle].vel.x -= v;
-				}
-				else if (e.key.keysym.sym == SDLK_w)
-				{
-					entityManager.GetRegistry().kinematics[triangle].vel.y -= -v;
-				}
-				else if (e.key.keysym.sym == SDLK_s)
-				{
-					entityManager.GetRegistry().kinematics[triangle].vel.y -= v;
-				}
-				else if (e.key.keysym.sym == SDLK_q)
-				{
-					entityManager.GetRegistry().kinematics[triangle].angularVel = 0;
-				}
-				else if (e.key.keysym.sym == SDLK_e)
-				{
-					entityManager.GetRegistry().kinematics[triangle].angularVel = 0;
-				}
-				else if (e.key.keysym.sym == SDLK_LEFT)
+				if (e.key.keysym.sym == SDLK_LEFT)
 				{
 					entityManager.GetRegistry().kinematics[square2].acc.x -= -v;
 					keyPressed = false;
