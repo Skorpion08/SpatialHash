@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <typeinfo>
-#include <typeindex>
+#include <mutex>
 
 #include "TextureManager.h"
 #include "Vector.h"
@@ -22,10 +22,6 @@ inline ComponentID TransformID = 0;
 inline ComponentID SpriteID = 1;
 inline ComponentID KinematicsID = 2;
 inline ComponentID RigidbodyID = 3;
-
-
-
-
 
 enum EntityMovability
 {
@@ -43,13 +39,13 @@ struct Entity
 // Components:
 struct Column
 {
-	Column(const std::type_info& t, size_t size, size_t count) : type(t), element_size(size), m_count(count) {}
+	Column(const std::type_info& t, size_t size) : type(t), element_size(size), m_count(0) {}
 
 	std::vector<uint8_t> elements; // We use a uint8_t as a buffer for memory
 	const std::type_info& type;
 	size_t element_size;
 	size_t m_count;
-
+	
 	template <typename T>
 	bool Insert(T&& values)
 	{

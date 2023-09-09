@@ -80,7 +80,7 @@ void Application::MainLoop()
 	
 	SDL_Event e;
 
-	float v = 500.0f;
+	float v = 1000.0f;
 
 	float ad = 1000.0f;
 
@@ -104,7 +104,7 @@ void Application::MainLoop()
 	entityManager.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
 	OBB obb2(100, 100);
 	
-	entityManager.AddRigidbody(square2, 100, true, 200);
+	entityManager.AddRigidbody(square2, 60, true, 490);
 	entityManager.AddCollision(square2, &obb2);
 
 	EntityID square3 = entityManager.CreateEnitity();
@@ -114,7 +114,7 @@ void Application::MainLoop()
 	entityManager.AddSprite(square3, nullptr, &dst3, textureManager.Load("resources/square.png"));
 	AABB aabb1(100, 100);
 
-	entityManager.AddRigidbody(square3, 150, true, 200);
+	entityManager.AddRigidbody(square3, 50, true, 490);
 
 	entityManager.AddCollision(square3, &aabb1);
 	/*
@@ -170,25 +170,32 @@ void Application::MainLoop()
 	entityManager.AddTransform(border, { 50000, 700 });
 	SDL_Rect bordeah = { 0,0,100,10000 };
 	//entityManager.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
+	entityManager.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
 	AABB borderaa(100, 10000);
 	entityManager.AddCollision(border, &borderaa);
 	entityManager.AddRigidbody(border, 0, false);
 
-	entityManager.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
 
-	Column column(typeid(Transform), sizeof(Transform), 0);
-	column.Insert<Transform>(Transform());
-	column.Insert<Transform>(Transform());
-	column.Insert<Transform>(Transform());
-	column.Insert<Transform>(Transform());
-	column.Get<Transform>(1)->pos.x = 10;
+	Archetype arch;
+	arch.table.push_back(Column(typeid(Transform), sizeof(Transform)));
+	arch.table.push_back(Column(typeid(Sprite), sizeof(Sprite)));
+	arch.table.push_back(Column(typeid(Kinematics), sizeof(Kinematics)));
 
-	column.Get<Transform>(2)->pos.x = 205;
-	printf("column %d\n\n", column.elements.size());
-	for (int i = 0; i < column.elements.size()/column.element_size; ++i)
-	{
-		printf("%f\n", column.Get<Transform>(i)->pos.x);
-	}
+	arch.table[0].Insert<Transform>(Transform());
+	arch.table[0].Insert<Transform>(Transform());
+	arch.table[0].Insert<Transform>(Transform());
+	arch.table[0].Insert<Transform>(Transform());
+	//arch.table[0].Insert<Transform>(Transform());
+
+	arch.table[1].Insert<Sprite>(Sprite());
+	arch.table[1].Insert<Sprite>(Sprite());
+	arch.table[1].Insert<Sprite>(Sprite());
+
+	arch.table[2].Insert<Kinematics>(Kinematics());
+	arch.table[2].Insert<Kinematics>(Kinematics());
+
+	arch.table[2].Get<Kinematics>(0)->vel.x = 10;
+	printf("\t\t\n %d", sizeof(arch.table[0].elements[0]) * arch.table[0].elements.size() + sizeof(arch.table[1].elements[0]) * arch.table[1].elements.size() + sizeof(arch.table[2].elements[0]) * arch.table[2].elements.size());
 
 	/*
 	std::vector<SDL_Rect> s;
