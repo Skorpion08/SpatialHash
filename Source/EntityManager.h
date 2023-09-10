@@ -14,13 +14,14 @@
 #include "TextureManager.h"
 #include "Vector.h"
 #include "Shape.h"
+#include "Type.h"
 
 using EntityID = size_t;
 using ComponentID = EntityID;
 using ArchetypeID = EntityID;
 
-//using Type = std::vector<ComponentID>;
-using Type = std::set<ComponentID>;
+//using Typee = std::vector<ComponentID>;
+using Typee = std::set<ComponentID>;
 
 enum EntityMovability
 {
@@ -200,8 +201,10 @@ public:
 			return nullptr;
 
 		EntityRecord& record = entityRecord[entityID];
-		Type type = record.archetype->type;
-		type.insert(componentID);
+		Archetype* oldArchetype = record.archetype;
+		Type type = oldArchetype->type;
+
+		type.Insert(componentID);
 
 		if (typeToArchetype.contains(type))
 		{

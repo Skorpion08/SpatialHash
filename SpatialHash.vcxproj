@@ -160,12 +160,14 @@
     <ClCompile Include="Source\Shape.cpp" />
     <ClCompile Include="Source\SpatialHashMap.cpp" />
     <ClCompile Include="Source\TextureManager.cpp" />
+    <ClCompile Include="Source\Type.cpp" />
     <ClCompile Include="Source\Vector.cpp" />
     <ClCompile Include="Source\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Shape.h" />
+    <ClInclude Include="Source\Type.h" />
     <ClInclude Include="Source\Vector.h" />
     <ClInclude Include="Source\Application.h" />
     <ClInclude Include="Source\EntityManager.h" />

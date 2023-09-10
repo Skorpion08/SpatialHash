@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <chrono>
+
 #include "Application.h"
 #include "Vector.h"
 #include "Shape.h"
@@ -198,6 +199,17 @@ void Application::MainLoop()
 	printf("\t\t\n %d\n", sizeof(arch.table[0].elements[0]) * arch.table[0].elements.size() + sizeof(arch.table[1].elements[0]) * arch.table[1].elements.size() + sizeof(arch.table[2].elements[0]) * arch.table[2].elements.size());
 
 	std::cout << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Kinematics>() << " " << ecs.GetComponentID<Sprite>() << "\n";
+
+	Type svec;
+
+	svec.Insert(3);
+	svec.Insert(4);
+	svec.Insert(1);
+
+	for (int i = 0; i < svec.Size(); ++i)
+	{
+		std::cout << svec[i] << '\n';
+	}
 
 	/*
 	std::vector<SDL_Rect> s;
