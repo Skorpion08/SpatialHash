@@ -6,7 +6,10 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <typeinfo>
-#include <mutex>
+#include <typeindex>
+
+#include <map>
+#include <set>
 
 #include "TextureManager.h"
 #include "Vector.h"
@@ -16,12 +19,8 @@ using EntityID = size_t;
 using ComponentID = EntityID;
 using ArchetypeID = EntityID;
 
-using Type = std::vector<ComponentID>;
-
-inline ComponentID TransformID = 0;
-inline ComponentID SpriteID = 1;
-inline ComponentID KinematicsID = 2;
-inline ComponentID RigidbodyID = 3;
+//using Type = std::vector<ComponentID>;
+using Type = std::set<ComponentID>;
 
 enum EntityMovability
 {
@@ -34,27 +33,39 @@ struct Entity
 	EntityID id;
 	bool active;
 	EntityMovability movability;
+
+	template<typename T>
+	void Add()
+	{
+
+	}
+
+	template<typename T>
+	void Get()
+	{
+
+	}
 };
 
 // Components:
 struct Column
 {
-	Column(const std::type_info& t, size_t size) : type(t), element_size(size), m_count(0) {}
+	Column(const std::type_index& t, size_t size) : type(t), element_size(size), m_count(0) {}
 
 	std::vector<uint8_t> elements; // We use a uint8_t as a buffer for memory
-	const std::type_info& type;
+	const std::type_index& type;
 	size_t element_size;
 	size_t m_count;
 	
-	template <typename T>
-	bool Insert(T&& values)
+	template <typename T, typename... Args>
+	bool Insert(Args&&... args)
 	{
-		printf("\t%d %d\n", m_count, elements.size());
 		if (typeid(T) == type)
 		{
 			elements.resize(elements.size() + element_size);
 			T* elementPtr = reinterpret_cast<T*>(elements.data() + m_count++*element_size);
-			*elementPtr = values;
+			*elementPtr = T(std::forward<Args>(args)...);
+			printf("\t%d %d\n", m_count, elements.size());
 			return true;
 		}
 		return false;
@@ -63,7 +74,6 @@ struct Column
 	template <typename T>
 	T* Get(size_t row)
 	{
-		//printf("%s %s",type->name(), typeid(T).name());
 		if (typeid(T) == type)
 		{
 			return reinterpret_cast<T*>(elements.data() + row * element_size);
@@ -71,13 +81,21 @@ struct Column
 		return nullptr;
 	}
 };
-
 struct Archetype
 {
 	ArchetypeID id;
 	Type type;
 	std::vector<Column> table;
 };
+
+struct EntityRecord
+{
+	Archetype* archetype;
+	size_t row;
+};
+
+inline std::unordered_map<EntityID, EntityRecord> entityRecord;
+inline std::map<Type, Archetype> typeToArchetype;
 
 using ArchetypeSet = std::unordered_set<ArchetypeID>;
 
@@ -132,6 +150,12 @@ struct Collision
 	bool blockCollision;
 };
 
+struct World
+{
+	//std::vector<>
+};
+
+
 // Holds what components entities use
 struct Registry
 {
@@ -141,28 +165,51 @@ struct Registry
 	std::unordered_map<EntityID, Collision> collisionComponents;
 	std::unordered_map<EntityID, Rigidbody> rigidbodies;
 };
-class EntityManager
+class ECS
 {
-	EntityManager() : nextEntityID(0) {}
+	ECS() : nextEntityID(0) {}
 
 public:
 	// Prevent copying
-	EntityManager(EntityManager const&) = delete;
-	EntityManager& operator=(EntityManager const&) = delete;
+	ECS(ECS const&) = delete;
+	ECS& operator=(ECS const&) = delete;
 
 
-	static EntityManager& GetInstance()
+	static ECS& GetInstance()
 	{
-		static EntityManager instance;
+		static ECS instance;
 		return instance;
 	}
 
 	// Returns its ID
 	EntityID CreateEnitity(EntityMovability movability = Dynamic);
 
+	template <typename T>
+	ComponentID GetComponentID()
+	{
+		static ComponentID componentID = nextComponentID++;
+		return componentID;
+	}
+
 	template <typename T, typename... Args>
 	T* Add(EntityID entityID, Args&&... args)
 	{
+		ComponentID componentID = GetComponentID<T>();
+
+		if (!entityRecord.contains(entityID))
+			return nullptr;
+
+		EntityRecord& record = entityRecord[entityID];
+		Type type = record.archetype->type;
+		type.insert(componentID);
+
+		if (typeToArchetype.contains(type))
+		{
+
+		}
+
+		// ignore rest of the code in this function
+
 		registry.sprites.emplace(entityID, T(std::forward<Args>(args)...));
 		return &GetInstance().GetRegistry().sprites[entityID];
 	}
@@ -186,6 +233,7 @@ public:
 
 private:
 	EntityID nextEntityID;
+	ComponentID nextComponentID;
 	
 	std::vector<Entity> entities;
 	Registry registry;

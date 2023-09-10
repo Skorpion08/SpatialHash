@@ -91,89 +91,89 @@ void Application::MainLoop()
 	bool keyPressed = false;
 
 
-	EntityID fence = entityManager.CreateEnitity();
-	entityManager.AddTransform(fence);
+	EntityID fence = ecs.CreateEnitity();
+	ecs.AddTransform(fence);
 	SDL_Rect rectum = { 0,0, 4176 * 2, 960 * 2 };
-	entityManager.AddSprite(fence, nullptr, &rectum, textureManager.Load("resources/fence.png"));
+	ecs.AddSprite(fence, nullptr, &rectum, textureManager.Load("resources/fence.png"));
 
 
-	EntityID square2 = entityManager.CreateEnitity();
-	entityManager.AddTransform(square2, { 600,600 });
-	entityManager.AddKinematics(square2);
+	EntityID square2 = ecs.CreateEnitity();
+	ecs.AddTransform(square2, { 600,600 });
+	ecs.AddKinematics(square2);
 	SDL_Rect dst2(100, 100, 100, 100);
-	entityManager.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
+	ecs.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
 	OBB obb2(100, 100);
 	
-	entityManager.AddRigidbody(square2, 60, true, 490);
-	entityManager.AddCollision(square2, &obb2);
+	ecs.AddRigidbody(square2, 60, true, 490);
+	ecs.AddCollision(square2, &obb2);
 
-	EntityID square3 = entityManager.CreateEnitity();
-	entityManager.AddTransform(square3, { 400,600 });
-	entityManager.AddKinematics(square3);
+	EntityID square3 = ecs.CreateEnitity();
+	ecs.AddTransform(square3, { 400,600 });
+	ecs.AddKinematics(square3);
 	SDL_Rect dst3(100, 100, 100, 100);
-	entityManager.AddSprite(square3, nullptr, &dst3, textureManager.Load("resources/square.png"));
+	ecs.AddSprite(square3, nullptr, &dst3, textureManager.Load("resources/square.png"));
 	AABB aabb1(100, 100);
 
-	entityManager.AddRigidbody(square3, 50, true, 490);
+	ecs.AddRigidbody(square3, 50, true, 490);
 
-	entityManager.AddCollision(square3, &aabb1);
+	ecs.AddCollision(square3, &aabb1);
 	/*
-	EntityID swastyka = entityManager.CreateEnitity();
-	entityManager.AddTransform(swastyka);
-	entityManager.AddKinematics(swastyka, { 0,0 }, { 0,0 }, 0, 1);
+	EntityID swastyka = ecs.CreateEnitity();
+	ecs.AddTransform(swastyka);
+	ecs.AddKinematics(swastyka, { 0,0 }, { 0,0 }, 0, 1);
 	SDL_Rect dsts(0, 0, 400, 400);
-	entityManager.AddSprite(swastyka, nullptr, &dsts, textureManager.Load("resources/swastyka.png"));
+	ecs.AddSprite(swastyka, nullptr, &dsts, textureManager.Load("resources/swastyka.png"));
 
 	OBB swastik(400, 400);
-	entityManager.AddCollision(swastyka, &swastik);
+	ecs.AddCollision(swastyka, &swastik);
 	*/
-	EntityID rectangle = entityManager.CreateEnitity(Static);
-	entityManager.AddTransform(rectangle, { 400,700 });
-	entityManager.AddKinematics(rectangle);
+	EntityID rectangle = ecs.CreateEnitity(Static);
+	ecs.AddTransform(rectangle, { 400,700 });
+	ecs.AddKinematics(rectangle);
 	SDL_Rect dstrect(0, 0, 100000, 100);
-	entityManager.AddSprite(rectangle, nullptr, &dstrect, textureManager.Load("resources/square.png"));
+	ecs.AddSprite(rectangle, nullptr, &dstrect, textureManager.Load("resources/square.png"));
 	AABB aabb2(100000, 100);
 
-	entityManager.AddRigidbody(rectangle, 0, false);
-	entityManager.AddCollision(rectangle, &aabb2);
+	ecs.AddRigidbody(rectangle, 0, false);
+	ecs.AddCollision(rectangle, &aabb2);
 
 	/*
-	EntityID rectangle2 = entityManager.CreateEnitity(Dynamic);
-	entityManager.AddTransform(rectangle2, { 400, 0});
-	entityManager.AddKinematics(rectangle2, {0,100});
+	EntityID rectangle2 = ecs.CreateEnitity(Dynamic);
+	ecs.AddTransform(rectangle2, { 400, 0});
+	ecs.AddKinematics(rectangle2, {0,100});
 	SDL_Rect dstrect2(0, 0, 10000, 100);
-	entityManager.AddSprite(rectangle2, nullptr, &dstrect2, textureManager.Load("resources/square.png"));
+	ecs.AddSprite(rectangle2, nullptr, &dstrect2, textureManager.Load("resources/square.png"));
 	AABB aabb3(100000, 100);
 
-	entityManager.AddRigidbody(rectangle2, 1e6, false);
-	entityManager.AddCollision(rectangle2, &aabb3);
+	ecs.AddRigidbody(rectangle2, 1e6, false);
+	ecs.AddCollision(rectangle2, &aabb3);
 	*/
 	/*
-	EntityID square4 = entityManager.CreateEnitity();
-	entityManager.AddTransform(square4, { 400,400 });
+	EntityID square4 = ecs.CreateEnitity();
+	ecs.AddTransform(square4, { 400,400 });
 	SDL_Rect dst4(100, 100, 100, 100);
-	entityManager.AddSprite(square4, nullptr, &dst4, textureManager.Load("resources/triangle.png"));
+	ecs.AddSprite(square4, nullptr, &dst4, textureManager.Load("resources/triangle.png"));
 	AABB aabb2(100, 100, { 400,400 });
 
-	entityManager.GetRegistry().collisionComponents[square4].collider = &aabb2;
+	ecs.GetRegistry().collisionComponents[square4].collider = &aabb2;
 
-	EntityID square5 = entityManager.CreateEnitity();
-	entityManager.AddTransform(square5, { 400,400 });
+	EntityID square5 = ecs.CreateEnitity();
+	ecs.AddTransform(square5, { 400,400 });
 	SDL_Rect dst5(100, 100, 100, 100);
-	entityManager.AddSprite(square5, nullptr, &dst5, textureManager.Load("resources/triangle.png"));
+	ecs.AddSprite(square5, nullptr, &dst5, textureManager.Load("resources/triangle.png"));
 	AABB aabb3(100, 100, { 400,400 });
 
-	entityManager.GetRegistry().collisionComponents[square5].collider = &aabb3;
+	ecs.GetRegistry().collisionComponents[square5].collider = &aabb3;
 	*/
 
-	EntityID border = entityManager.CreateEnitity(Static);
-	entityManager.AddTransform(border, { 50000, 700 });
+	EntityID border = ecs.CreateEnitity(Static);
+	ecs.AddTransform(border, { 50000, 700 });
 	SDL_Rect bordeah = { 0,0,100,10000 };
-	//entityManager.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
-	entityManager.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
+	//ecs.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
+	ecs.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
 	AABB borderaa(100, 10000);
-	entityManager.AddCollision(border, &borderaa);
-	entityManager.AddRigidbody(border, 0, false);
+	ecs.AddCollision(border, &borderaa);
+	ecs.AddRigidbody(border, 0, false);
 
 
 	Archetype arch;
@@ -181,21 +181,23 @@ void Application::MainLoop()
 	arch.table.push_back(Column(typeid(Sprite), sizeof(Sprite)));
 	arch.table.push_back(Column(typeid(Kinematics), sizeof(Kinematics)));
 
-	arch.table[0].Insert<Transform>(Transform());
-	arch.table[0].Insert<Transform>(Transform());
-	arch.table[0].Insert<Transform>(Transform());
-	arch.table[0].Insert<Transform>(Transform());
+	arch.table[0].Insert<Transform>();
+	arch.table[0].Insert<Transform>();
+	arch.table[0].Insert<Transform>();
+	arch.table[0].Insert<Transform>();
 	//arch.table[0].Insert<Transform>(Transform());
 
-	arch.table[1].Insert<Sprite>(Sprite());
-	arch.table[1].Insert<Sprite>(Sprite());
-	arch.table[1].Insert<Sprite>(Sprite());
+	arch.table[1].Insert<Sprite>();
+	arch.table[1].Insert<Sprite>();
+	arch.table[1].Insert<Sprite>();
 
-	arch.table[2].Insert<Kinematics>(Kinematics());
-	arch.table[2].Insert<Kinematics>(Kinematics());
+	arch.table[2].Insert<Kinematics>();
+	arch.table[2].Insert<Kinematics>();
 
 	arch.table[2].Get<Kinematics>(0)->vel.x = 10;
-	printf("\t\t\n %d", sizeof(arch.table[0].elements[0]) * arch.table[0].elements.size() + sizeof(arch.table[1].elements[0]) * arch.table[1].elements.size() + sizeof(arch.table[2].elements[0]) * arch.table[2].elements.size());
+	printf("\t\t\n %d\n", sizeof(arch.table[0].elements[0]) * arch.table[0].elements.size() + sizeof(arch.table[1].elements[0]) * arch.table[1].elements.size() + sizeof(arch.table[2].elements[0]) * arch.table[2].elements.size());
+
+	std::cout << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Kinematics>() << " " << ecs.GetComponentID<Sprite>() << "\n";
 
 	/*
 	std::vector<SDL_Rect> s;
@@ -210,12 +212,12 @@ void Application::MainLoop()
 	}
 	for (int i = 0; i < 50; ++i)
 	{
-		EntityID ent = entityManager.CreateEnitity();
-		entityManager.AddTransform(ent, { (float)10*i, 0 });
-		entityManager.AddKinematics(ent);
-		entityManager.AddSprite(ent, nullptr, &s[i], textureManager.Load("resources/square.png"));
-		entityManager.AddCollision(ent, &c[i]);
-		entityManager.AddRigidbody(ent, 100, true, 100, 0.4);
+		EntityID ent = ecs.CreateEnitity();
+		ecs.AddTransform(ent, { (float)10*i, 0 });
+		ecs.AddKinematics(ent);
+		ecs.AddSprite(ent, nullptr, &s[i], textureManager.Load("resources/square.png"));
+		ecs.AddCollision(ent, &c[i]);
+		ecs.AddRigidbody(ent, 100, true, 100, 0.4);
 		printf("%f\n", (i * 100) / 1e6);
 
 	}
@@ -240,62 +242,62 @@ void Application::MainLoop()
 			{
 				if (e.key.keysym.sym == SDLK_LEFT)
 				{
-					entityManager.GetRegistry().kinematics[square2].acc.x += -v;
+					ecs.GetRegistry().kinematics[square2].acc.x += -v;
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_RIGHT)
 				{
-					entityManager.GetRegistry().kinematics[square2].acc.x += v;
+					ecs.GetRegistry().kinematics[square2].acc.x += v;
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_UP)
 				{
-					entityManager.GetRegistry().kinematics[square2].acc.y += -v;
+					ecs.GetRegistry().kinematics[square2].acc.y += -v;
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_DOWN)
 				{
-					entityManager.GetRegistry().kinematics[square2].acc.y += v;
+					ecs.GetRegistry().kinematics[square2].acc.y += v;
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_o)
 				{
-					entityManager.GetRegistry().kinematics[square2].angularVel = -b;
+					ecs.GetRegistry().kinematics[square2].angularVel = -b;
 				}
 				else if (e.key.keysym.sym == SDLK_p)
 				{
-					entityManager.GetRegistry().kinematics[square2].angularVel = b;
+					ecs.GetRegistry().kinematics[square2].angularVel = b;
 				}
 			}
 			else if (e.type == SDL_KEYUP && e.key.repeat == 0)
 			{
 				if (e.key.keysym.sym == SDLK_LEFT)
 				{
-					entityManager.GetRegistry().kinematics[square2].acc.x -= -v;
+					ecs.GetRegistry().kinematics[square2].acc.x -= -v;
 					keyPressed = false;
 				}
 				else if (e.key.keysym.sym == SDLK_RIGHT)
 				{
-					entityManager.GetRegistry().kinematics[square2].acc.x -= v;
+					ecs.GetRegistry().kinematics[square2].acc.x -= v;
 					keyPressed = false;
 				}
 				else if (e.key.keysym.sym == SDLK_UP)
 				{
-					entityManager.GetRegistry().kinematics[square2].acc.y -= -v;
+					ecs.GetRegistry().kinematics[square2].acc.y -= -v;
 					keyPressed = false;
 				}
 				else if (e.key.keysym.sym == SDLK_DOWN)
 				{
-					entityManager.GetRegistry().kinematics[square2].acc.y -= v;
+					ecs.GetRegistry().kinematics[square2].acc.y -= v;
 					keyPressed = false;
 				}
 				else if (e.key.keysym.sym == SDLK_o)
 				{
-					entityManager.GetRegistry().kinematics[square2].angularVel = 0;
+					ecs.GetRegistry().kinematics[square2].angularVel = 0;
 				}
 				else if (e.key.keysym.sym == SDLK_p)
 				{
-					entityManager.GetRegistry().kinematics[square2].angularVel = 0;
+					ecs.GetRegistry().kinematics[square2].angularVel = 0;
 				}
 			}
 			
@@ -311,26 +313,19 @@ void Application::MainLoop()
 		currentUpdate = SDL_GetTicks();
 		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001;
-		//deltaTime *= 4;
-		//if (!keyPressed)
-		//{
-		//	entityManager.GetRegistry().kinematics[square2].vel.x /= 1 + d * deltaTime;
-		//	entityManager.GetRegistry().kinematics[square2].vel.y /= 1 + d * deltaTime;
-		//}
-		//printf("deltatime %f\n", deltaTime);
 		transformSystem.Update(deltaTime);
 		collisionSystem.Update();
 		collisionSystem.SolveCollisions();
 
 		// Camera updating
-		camera.x = entityManager.GetRegistry().transforms[square2].pos.x - window.w / 2;
-		camera.y = entityManager.GetRegistry().transforms[square2].pos.y - window.h / 2;
+		camera.x = ecs.GetRegistry().transforms[square2].pos.x - window.w / 2;
+		camera.y = ecs.GetRegistry().transforms[square2].pos.y - window.h / 2;
 
-		//entityManager.GetRegistry().transforms[rectangle].pos = { 400, 700 };
-		//entityManager.GetRegistry().kinematics[rectangle].vel = { 0,0 };
-		//printf("vel: %f\n", entityManager.GetRegistry().kinematics[square2].vel.x);
+		//ecs.GetRegistry().transforms[rectangle].pos = { 400, 700 };
+		//ecs.GetRegistry().kinematics[rectangle].vel = { 0,0 };
+		//printf("vel: %f\n", ecs.GetRegistry().kinematics[square2].vel.x);
 		//printf("camera: %f %f\n", camera.x, camera.y);
-		//printf("acc %f %f\n", entityManager.GetRegistry().kinematics[square2].acc.x, entityManager.GetRegistry().kinematics[square2].acc.y);
+		//printf("acc %f %f\n", ecs.GetRegistry().kinematics[square2].acc.x, ecs.GetRegistry().kinematics[square2].acc.y);
 		spritesSystem.Update({ static_cast<float>(camera.x), static_cast<float>(camera.y) });
 		spritesSystem.Render();
 

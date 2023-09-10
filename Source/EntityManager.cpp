@@ -1,12 +1,13 @@
 #include "EntityManager.h"
 
-EntityID EntityManager::CreateEnitity(EntityMovability movability)
+EntityID ECS::CreateEnitity(EntityMovability movability)
 {
 	entities.emplace_back(Entity(nextEntityID, true, movability));
+	entityRecord.emplace(nextEntityID, EntityRecord(&typeToArchetype[{}], 0));
 	return nextEntityID++;
 }
 
-Sprite* EntityManager::AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture)
+Sprite* ECS::AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture)
 {
 	if (EntityValid(entityID))
 	{
@@ -16,7 +17,7 @@ Sprite* EntityManager::AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst
 	return nullptr;
 }
 
-Transform* EntityManager::AddTransform(EntityID entityID, Vector2 position, float rotation, Vector2 scale)
+Transform* ECS::AddTransform(EntityID entityID, Vector2 position, float rotation, Vector2 scale)
 {
 	if (EntityValid(entityID))
 	{
@@ -26,7 +27,7 @@ Transform* EntityManager::AddTransform(EntityID entityID, Vector2 position, floa
 	return nullptr;
 }
 
-Kinematics* EntityManager::AddKinematics(EntityID entityID, Vector2 vel, Vector2 acc, float angularVel, float angularAcc)
+Kinematics* ECS::AddKinematics(EntityID entityID, Vector2 vel, Vector2 acc, float angularVel, float angularAcc)
 {
 	if (EntityValid(entityID))
 	{
@@ -36,7 +37,7 @@ Kinematics* EntityManager::AddKinematics(EntityID entityID, Vector2 vel, Vector2
 	return nullptr;
 }
 
-Collision* EntityManager::AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision)
+Collision* ECS::AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision)
 {
 	if (EntityValid(entityID))
 	{
@@ -46,7 +47,7 @@ Collision* EntityManager::AddCollision(EntityID entityID, Shape2D* collider, boo
 	return nullptr;
 }
 
-Rigidbody* EntityManager::AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc, float elasticity, float staticFriction, float dynamicFriction)
+Rigidbody* ECS::AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc, float elasticity, float staticFriction, float dynamicFriction)
 {
 	if (EntityValid(entityID))
 	{
@@ -56,7 +57,7 @@ Rigidbody* EntityManager::AddRigidbody(EntityID entityID, float mass, bool enabl
 	return nullptr;
 }
 
-void EntityManager::DestroyEntity(EntityID entityID)
+void ECS::DestroyEntity(EntityID entityID)
 {
 	entities[entityID].active = false;
 	// deactivate other components
@@ -71,7 +72,7 @@ void EntityManager::DestroyEntity(EntityID entityID)
 
 void SpriteSystem::Update(Vector2 cameraPos)
 {
-	auto& manager = EntityManager::GetInstance();
+	auto& manager = ECS::GetInstance();
 	auto& registry = manager.GetRegistry();
 	
 	for (auto& [entityID, sprite] : registry.sprites)
@@ -88,7 +89,7 @@ void SpriteSystem::Update(Vector2 cameraPos)
 
 void SpriteSystem::Render()
 {
-	auto& manager = EntityManager::GetInstance();
+	auto& manager = ECS::GetInstance();
 	auto& registry = manager.GetRegistry();
 	
 	for (auto& [entityID, sprite] : registry.sprites)
@@ -109,7 +110,7 @@ void SpriteSystem::Render()
 
 void TransformSystem::Update(double deltaTime)
 {
-	auto& manager = EntityManager::GetInstance();
+	auto& manager = ECS::GetInstance();
 	auto& registry = manager.GetRegistry();
 	
 	for (auto& [entityID, kinematics] : registry.kinematics)
@@ -156,7 +157,7 @@ void TransformSystem::Update(double deltaTime)
 
 void TransformSystem::SetScale(EntityID entityID, Vector2 scale)
 {
-	auto& manager = EntityManager::GetInstance();
+	auto& manager = ECS::GetInstance();
 	auto& registry = manager.GetRegistry();
 
 	if (registry.transforms.contains(entityID))
@@ -169,7 +170,7 @@ void TransformSystem::SetScale(EntityID entityID, Vector2 scale)
 
 void CollisionSystem::Update()
 {
-	auto& manager = EntityManager::GetInstance();
+	auto& manager = ECS::GetInstance();
 	auto& registry = manager.GetRegistry();
 
 	for (auto& [entityID, CollisionComponent] : registry.collisionComponents)
@@ -326,7 +327,7 @@ CollisionInfo CollisionSystem::POLYtoPOLY(Shape2D& shapeA, Shape2D& shapeB)
 
 void CollisionSystem::SolveCollisions()
 {
-	auto& manager = EntityManager::GetInstance();
+	auto& manager = ECS::GetInstance();
 	auto& entities = manager.GetEntities();
 	auto& registry = manager.GetRegistry();
 

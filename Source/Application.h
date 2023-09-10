@@ -35,7 +35,7 @@ private:
 	double deltaTime;
 
 	// ecs stuff
-	EntityManager& entityManager = EntityManager::GetInstance();
+	ECS& ecs = ECS::GetInstance();
 	TextureManager& textureManager = TextureManager::GetInstance();
 
 	SpriteSystem spritesSystem;
