@@ -1,10 +1,15 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
 
 class Type
 {
 public:
+    Type() = default;
+
+    Type(std::initializer_list<size_t>&& initList) : m_vector(std::move(initList)) { std::sort(m_vector.begin(), m_vector.end()); }
+
 
     inline size_t operator[](size_t index) const { return m_vector[index]; }
 
@@ -15,4 +20,17 @@ public:
 private:
 
 	std::vector<size_t> m_vector;
+};
+
+struct TypeHash 
+{
+    size_t operator()(const Type& type) const {
+        // Your custom hash implementation here
+        size_t hashValue = 0;
+        for (size_t i = 0; i < type.Size(); ++i) {
+            // Combine the hash value with each element in the vector.
+            hashValue ^= std::hash<size_t>{}(type[i]);
+        }
+        return hashValue;
+    }
 };

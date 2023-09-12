@@ -35,7 +35,7 @@ struct Entity
 	bool active;
 	EntityMovability movability;
 
-	template<typename T>
+	/*template<typename T>
 	void Add()
 	{
 
@@ -45,7 +45,7 @@ struct Entity
 	void Get()
 	{
 
-	}
+	}*/
 };
 
 // Components:
@@ -96,7 +96,7 @@ struct EntityRecord
 };
 
 inline std::unordered_map<EntityID, EntityRecord> entityRecord;
-inline std::map<Type, Archetype> typeToArchetype;
+inline std::unordered_map<Type, Archetype, TypeHash> typeToArchetype;
 
 using ArchetypeSet = std::unordered_set<ArchetypeID>;
 
@@ -206,10 +206,10 @@ public:
 
 		type.Insert(componentID);
 
-		if (typeToArchetype.contains(type))
+		/*if (typeToArchetype.contains(type))
 		{
 
-		}
+		}*/
 
 		// ignore rest of the code in this function
 

@@ -177,40 +177,37 @@ void Application::MainLoop()
 	ecs.AddRigidbody(border, 0, false);
 
 
-	Archetype arch;
-	arch.table.push_back(Column(typeid(Transform), sizeof(Transform)));
-	arch.table.push_back(Column(typeid(Sprite), sizeof(Sprite)));
-	arch.table.push_back(Column(typeid(Kinematics), sizeof(Kinematics)));
+	//Archetype arch;
+	//arch.table.push_back(Column(typeid(Transform), sizeof(Transform)));
+	//arch.table.push_back(Column(typeid(Sprite), sizeof(Sprite)));
+	//arch.table.push_back(Column(typeid(Kinematics), sizeof(Kinematics)));
 
-	arch.table[0].Insert<Transform>();
-	arch.table[0].Insert<Transform>();
-	arch.table[0].Insert<Transform>();
-	arch.table[0].Insert<Transform>();
-	//arch.table[0].Insert<Transform>(Transform());
+	//arch.table[0].Insert<Transform>();
+	//arch.table[0].Insert<Transform>();
+	//arch.table[0].Insert<Transform>();
+	//arch.table[0].Insert<Transform>();
+	////arch.table[0].Insert<Transform>(Transform());
 
-	arch.table[1].Insert<Sprite>();
-	arch.table[1].Insert<Sprite>();
-	arch.table[1].Insert<Sprite>();
+	//arch.table[1].Insert<Sprite>();
+	//arch.table[1].Insert<Sprite>();
+	//arch.table[1].Insert<Sprite>();
 
-	arch.table[2].Insert<Kinematics>();
-	arch.table[2].Insert<Kinematics>();
+	//arch.table[2].Insert<Kinematics>();
+	//arch.table[2].Insert<Kinematics>();
 
-	arch.table[2].Get<Kinematics>(0)->vel.x = 10;
-	printf("\t\t\n %d\n", sizeof(arch.table[0].elements[0]) * arch.table[0].elements.size() + sizeof(arch.table[1].elements[0]) * arch.table[1].elements.size() + sizeof(arch.table[2].elements[0]) * arch.table[2].elements.size());
+	//arch.table[2].Get<Kinematics>(0)->vel.x = 10;
+	//printf("\t\t\n %d\n", sizeof(arch.table[0].elements[0]) * arch.table[0].elements.size() + sizeof(arch.table[1].elements[0]) * arch.table[1].elements.size() + sizeof(arch.table[2].elements[0]) * arch.table[2].elements.size());
 
-	std::cout << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Kinematics>() << " " << ecs.GetComponentID<Sprite>() << "\n";
+	//std::cout << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Kinematics>() << " " << ecs.GetComponentID<Sprite>() << "\n";
 
-	Type svec;
+	std::unordered_map<Type, int, TypeHash> test;
 
-	svec.Insert(3);
-	svec.Insert(4);
-	svec.Insert(1);
+	Type svec = { 0,1 };
 
-	for (int i = 0; i < svec.Size(); ++i)
-	{
-		std::cout << svec[i] << '\n';
-	}
+	Type typo = { 0,2};
 
+	std::cout << TypeHash{}(svec) << '\n';
+	std::cout << TypeHash{}(typo) << '\n';
 	/*
 	std::vector<SDL_Rect> s;
 	std::vector<AABB> c;
