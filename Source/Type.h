@@ -10,6 +10,9 @@ public:
 
     Type(std::initializer_list<size_t>&& initList) : m_vector(std::move(initList)) { std::sort(m_vector.begin(), m_vector.end()); }
 
+    bool operator==(const Type& other) const {
+        return m_vector == other.m_vector;
+    }
 
     inline size_t operator[](size_t index) const { return m_vector[index]; }
 

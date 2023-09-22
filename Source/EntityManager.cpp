@@ -155,6 +155,7 @@ void TransformSystem::Update(double deltaTime)
 	}
 }
 
+// WIP
 void TransformSystem::SetScale(EntityID entityID, Vector2 scale)
 {
 	auto& manager = ECS::GetInstance();

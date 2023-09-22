@@ -105,7 +105,7 @@ void Application::MainLoop()
 	ecs.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
 	OBB obb2(100, 100);
 	
-	ecs.AddRigidbody(square2, 60, true, 490);
+	ecs.AddRigidbody(square2, 60, true, 490, 1);
 	ecs.AddCollision(square2, &obb2);
 
 	EntityID square3 = ecs.CreateEnitity();
@@ -135,7 +135,7 @@ void Application::MainLoop()
 	ecs.AddSprite(rectangle, nullptr, &dstrect, textureManager.Load("resources/square.png"));
 	AABB aabb2(100000, 100);
 
-	ecs.AddRigidbody(rectangle, 0, false);
+	ecs.AddRigidbody(rectangle, 0, false, 0, 1);
 	ecs.AddCollision(rectangle, &aabb2);
 
 	/*
@@ -170,8 +170,8 @@ void Application::MainLoop()
 	EntityID border = ecs.CreateEnitity(Static);
 	ecs.AddTransform(border, { 50000, 700 });
 	SDL_Rect bordeah = { 0,0,100,10000 };
-	//ecs.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
-	ecs.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
+	ecs.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
+	//ecs.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
 	AABB borderaa(100, 10000);
 	ecs.AddCollision(border, &borderaa);
 	ecs.AddRigidbody(border, 0, false);
@@ -199,15 +199,6 @@ void Application::MainLoop()
 	//printf("\t\t\n %d\n", sizeof(arch.table[0].elements[0]) * arch.table[0].elements.size() + sizeof(arch.table[1].elements[0]) * arch.table[1].elements.size() + sizeof(arch.table[2].elements[0]) * arch.table[2].elements.size());
 
 	//std::cout << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Kinematics>() << " " << ecs.GetComponentID<Sprite>() << "\n";
-
-	std::unordered_map<Type, int, TypeHash> test;
-
-	Type svec = { 0,1 };
-
-	Type typo = { 0,2};
-
-	std::cout << TypeHash{}(svec) << '\n';
-	std::cout << TypeHash{}(typo) << '\n';
 	/*
 	std::vector<SDL_Rect> s;
 	std::vector<AABB> c;
@@ -231,6 +222,101 @@ void Application::MainLoop()
 
 	}
 	*/
+
+	EntityID testy = ecs.CreateEnitity();
+	EntityID testy2 = ecs.CreateEnitity();
+	EntityID dwa = ecs.CreateEnitity();
+
+	ecs.Add<Transform>(testy, 10, 20);
+	ecs.Add<Transform>(testy2, 20, 50);
+	ecs.Add<Transform>(dwa, 20, 50);
+
+	struct A {
+		int a;
+		int b;
+		int c;
+	};
+
+	auto start = std::chrono::high_resolution_clock::now();
+	// 4000 = 1 ms na moim sprzecie
+	for (int i = 0; i < 4000*1; ++i)
+	{
+		ecs.Add<Transform>(ecs.CreateEnitity(), i*5, -i*7);
+		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
+	}
+		
+	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+
+
+	start = std::chrono::high_resolution_clock::now();
+	// 4000 = 1 ms na moim sprzecie
+	for (int i = 0; i < 4000 * 10; ++i)
+	{
+		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
+		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
+	}
+
+	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+
+	start = std::chrono::high_resolution_clock::now();
+	// 4000 = 1 ms na moim sprzecie
+	for (int i = 0; i < 4000 * 100; ++i)
+	{
+		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
+		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
+	}
+
+	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+
+	start = std::chrono::high_resolution_clock::now();
+	// 4000 = 1 ms na moim sprzecie
+	for (int i = 0; i < 4000 * 500; ++i)
+	{
+		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
+		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
+	}
+
+	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+
+	start = std::chrono::high_resolution_clock::now();
+	// 4000 = 1 ms na moim sprzecie
+	for (int i = 0; i < 4000 * 1000; ++i)
+	{
+		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
+		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
+	}
+
+	end = std::chrono::high_resolution_clock::now();duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+
+	start = std::chrono::high_resolution_clock::now();
+	// 4000 = 1 ms na moim sprzecie
+	for (int i = 0; i < 4000 * 4000; ++i)
+	{
+		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
+		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
+	}
+
+	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+
+	std::cout << "wartosci\n";
+
+	Archetype& arch = typeToArchetype[{ecs.GetComponentID<Transform>()}];
+	Archetype& arch2 = typeToArchetype[{ecs.GetComponentID<Kinematics>()}];
+	Archetype& arch3 = typeToArchetype[{ecs.GetComponentID<A>()}];
+
+	/*std::cout << arch.table[0].Get<Transform>(0)->pos.x << '\n';
+	std::cout << arch.table[0].Get<Transform>(1)->pos.x << '\n';
+	std::cout << arch.table[0].Get<Transform>(1000)->pos.x << '\n';
+	std::cout << arch2.table[0].Get<Kinematics>(999)->vel.x << '\n';
+	std::cout << arch3.table[0].Get<A>(1332)->c << '\n';*/
+	//std::cout << arch.table[0].Get<Transform>(0)->pos.x;
+
 	// Camera code
 	Vector2 camera;
 
@@ -262,11 +348,13 @@ void Application::MainLoop()
 				else if (e.key.keysym.sym == SDLK_UP)
 				{
 					ecs.GetRegistry().kinematics[square2].acc.y += -v;
+					SDL_RenderSetScale(renderer, 1, 1);
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_DOWN)
 				{
 					ecs.GetRegistry().kinematics[square2].acc.y += v;
+					SDL_RenderSetScale(renderer, 0.5, 0.5);
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_o)
@@ -381,12 +469,7 @@ void Application::MainLoop()
 		//printf("fps: %f\n", 1/deltaTime);
 		//printf("deltatime: %f\n", deltaTime);
 
-		/* frame cap
-		if (1000 / 100 > deltaTime)
-		{
-			SDL_Delay(1000 / 100 - deltaTime);
-		}
-		*/
+	//	if (1000 / 60 > deltaTime) SDL_Delay(1000 / 100 - deltaTime); 
 	}
 }
 
