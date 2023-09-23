@@ -140,10 +140,11 @@ public:
 	template <typename T, typename... Args>
 	void Add(EntityID entityID, Args&&... args)
 	{
-		ComponentID componentID = GetComponentID<T>();
-
 		if (!entityRecord.contains(entityID))
 			return;
+
+		ComponentID componentID = GetComponentID<T>();
+
 
 		EntityRecord& record = entityRecord[entityID];
 		Archetype* oldArchetype = record.archetype;
@@ -152,77 +153,15 @@ public:
 		auto& oldTable = oldArchetype->table;
 		newType.Insert(componentID);
 
-		//if (typeToArchetype.contains(newType))
-		//{
-		//	Archetype* newArchetype = &typeToArchetype[newType];
-		//	record.archetype = newArchetype;
-		//	auto& table = newArchetype->table;
-		//	size_t index = record.row;
-
-		//	// Sets the row to the end of column
-		//	record.row = table[0].m_count;
-		//	//std::cout << '\t' << record.row << "\n";
-		//	for (size_t i = 0; i < table.size(); ++i)
-		//	{
-		//		if (newType[i] == componentID)
-		//		{
-		//			table[i].Insert<T>(std::forward<Args>(args)...);
-		//			continue;
-		//		}
-
-		//		Column* oldCol = &oldTable[i];
-		//		if(oldCol)
-		//		{
-		//			memmove(table[i].Insert<T>(), oldCol->Get<T>(record.row), sizeof(T));
-		//			memmove(oldCol->Get<T>(oldCol->m_count--), oldCol->Get<T>(index), sizeof(T));
-		//		}
-		//		else
-		//		{
-		//			table[i].Insert<T>();
-		//		}
-		//	}
-		//}
-		//else
-		//{
-		//	Archetype* newArchetype = &typeToArchetype[newType];
-		//	record.archetype = newArchetype;
-		//	record.row = 0;
-		//	newArchetype->type = newType;
-		//	auto& table = newArchetype->table;
-
-		//	newArchetype->table.reserve(newType.Size());
-		//	for (size_t i = 0; i < newType.Size(); ++i)
-		//	{
-		//		table.push_back(Column(typeid(T), sizeof(T)));
-		//		//std::cout << table[i].newType.name() << "\n";
-		//		if (newType[i] == componentID)
-		//		{
-		//			table[i].Insert<T>(std::forward<Args>(args)...);
-		//			continue;
-		//		}
-
-		//		Column* oldCol = &oldTable[i];
-		//		if (oldCol)
-		//		{
-		//			memmove(table[i].Insert<T>(), oldCol->Get<T>(record.row), sizeof(T));
-		//			memmove(oldCol->Get<T>(oldCol->m_count--), oldCol->Get<T>(record.row), sizeof(T));
-		//		}
-		//		else
-		//		{
-		//			table[i].Insert<T>();
-		//		}
-		//		
-		//	}
-		//	
-		//}
 		bool createNewArchetype = !typeToArchetype.contains(newType);
 
 		Archetype* newArchetype = &typeToArchetype[newType];
 		record.archetype = newArchetype;
 		auto& table = newArchetype->table;
-		size_t oldIndex = record.row;
-
+		size_t oldRow = record.row;
 		int newCompIndex = newType.FindIndexFor(componentID);
+
+		// Create a new archetype if we couldn't find one
 		if (createNewArchetype)
 		{
 			table.reserve(newType.Size());
@@ -238,20 +177,23 @@ public:
 			}
 		}
 
+		record.row = table[0].m_count;
+
+		// Move over the data
 		for (int i = 0; i < newType.Size(); ++i)
 		{
 			if (i == newCompIndex)
 			{
-				table[newCompIndex].Insert<T>(std::forward<Args>(args)...);
+				table[newCompIndex].Insert<T>(std::move(args)...);
 				continue;
 			}
 
 			Column* oldCol = &oldTable[i];
-			table[i].PreallocFor(1);
-			memcpy(table[i].Insert<T>(), oldCol->Get<T>(oldIndex), sizeof(T));
-			//memcpy(oldCol->Get<T>(oldIndex), oldCol->Get<T>(m_count--), sizeof(T)); // We leave this out for now as we dont store wich row has wich entity. So now it simply leaves a hole in the array
+			table[i].ResizeFor(1);
+			memcpy(table[i].GetAddress(table[i].m_count++), oldCol->GetAddress(oldRow), table[i].element_size);
+			//--oldCol->m_count;
+			//memcpy(oldCol->Get<T>(oldRow), oldCol->Get<T>(m_count--), sizeof(T)); // We leave this out for now as we dont store wich row has wich entity. So now it simply leaves a hole in the array
 		}
-		record.row = table[0].m_count;
 	}
 
 	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);

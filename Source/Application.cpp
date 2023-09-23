@@ -212,37 +212,49 @@ void Application::MainLoop()
 	EntityID dwa = ecs.CreateEnitity();
 
 	ecs.Add<Transform>(testy, 10, 20);
-	//ecs.Add<Transform>(testy2, 20, 50);
+	ecs.Add<Transform>(testy2, 21, 51);
 	//ecs.Add<Transform>(dwa, 20, 50);
 
-	//struct A {
-	//	int a;
-	//	int b;
-	//	int c;
-	//};
+	struct A {
+		int a;
+		int b;
+		int c;
+	};
+
+	ecs.Add<A>(testy,5, 12, 15);
+	ecs.Add<A>(testy2, 6, 13, 16);
+	ecs.Add<Kinematics>(testy);
+	ecs.Add<Kinematics>(testy2);
 
 	Archetype& arch = typeToArchetype[{ecs.GetComponentID<Transform>()}];
-	//Archetype& arch2 = typeToArchetype[{ecs.GetComponentID<Kinematics>()}];
-	//Archetype& arch3 = typeToArchetype[{ecs.GetComponentID<A>()}];
+	Archetype& arch2 = typeToArchetype[{ecs.GetComponentID<Kinematics>()}];
+	Archetype& arch3 = typeToArchetype[{ecs.GetComponentID<A>()}];
 
-	//auto start = std::chrono::high_resolution_clock::now();
-	//arch.table[0].PreallocFor(4000);
-
-	//
+	Archetype& arch33 = typeToArchetype[{ecs.GetComponentID<Transform>(),ecs.GetComponentID<A>(), ecs.GetComponentID<Kinematics>() }];
+	std::cout << arch33.table[0].Get<Transform>(0)->pos.x << '\n';
+	std::cout << arch33.table[1].Get<A>(0)->b << '\n';
+	std::cout << arch33.table[1].m_count << '\n';
+	std::cout << arch33.table[0].Get<Transform>(1)->pos.x << '\n';
+	std::cout << arch33.table[1].Get<A>(1)->b << '\n';
+	const int t = 4000000;
+	auto start = std::chrono::high_resolution_clock::now();
 	//// 4000 = 1 ms na moim sprzecie
-	//for (int i = 0; i < 4000; ++i)
-	//{
-	//	ecs.Add<Transform>(ecs.CreateEnitity(), i*5, -i*7);
-	//	/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
-	//	ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
-	//}
-	//	
-	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+	for (int i = 0; i < t; ++i)
+	{
+		EntityID e = ecs.CreateEnitity();
+		ecs.Add<Transform>(e, i*5, -i*7);
+		//ecs.Add<A>(e, i * 5, -i * 7, i*i);
+		//ecs.Add<Kinematics>(e, Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+	}
+		
+	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
 
-	std::cout << "wartosci\n";
+	//std::cout << "wartosci\n";
 
-	std::cout << arch.table[0].Get<Transform>(0)->pos.x << '\n';
+	//std::cout << arch.table[0].Get<Transform>(0)->pos.x << '\n';
 	//std::cout << arch.table[0].Get<Transform>(1)->pos.x << '\n';
+	//std::cout << arch22.table[0].Get<Transform>(0)->pos.y << '\n';
+	//std::cout << arch22.table[1].Get<A>(0)->c << '\n';
 	//std::cout << arch.table[0].Get<Transform>(1000)->pos.x << '\n';
 	//std::cout << arch2.table[0].Get<Kinematics>(999)->vel.x << '\n';
 	//std::cout << arch3.table[0].Get<A>(1332)->c << '\n';
