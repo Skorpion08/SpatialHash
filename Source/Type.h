@@ -20,6 +20,8 @@ public:
 
     void Insert(size_t newElement);
 
+    int FindIndexFor(int x);
+
 private:
 
 	std::vector<size_t> m_vector;

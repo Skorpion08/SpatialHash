@@ -1,28 +1,20 @@
 #pragma once
 
-#include <SDL.h>
-
 #include <vector>
 #include <unordered_map>
-#include <unordered_set>
 #include <typeinfo>
 #include <typeindex>
 #include <iostream>
-
-#include <map>
-#include <set>
 
 #include "TextureManager.h"
 #include "Vector.h"
 #include "Shape.h"
 #include "Type.h"
+#include "Column.h"
 
 using EntityID = size_t;
 using ComponentID = EntityID;
 using ArchetypeID = EntityID;
-
-//using Typee = std::vector<ComponentID>;
-using Typee = std::set<ComponentID>;
 
 enum EntityMovability
 {
@@ -37,23 +29,6 @@ struct Entity
 	EntityMovability movability;
 };
 
-// Components:
-struct Column
-{
-	Column(const std::type_info& t, size_t size) : type(t), element_size(size), m_count(0) {}
-
-	std::vector<uint8_t> elements; // We use a uint8_t as a buffer for memory
-	const std::type_info& type;
-	size_t element_size;
-	size_t m_count;
-	
-	template <typename T, typename... Args>
-	T* Insert(Args&&... args);
-
-
-	template <typename T>
-	T* Get(size_t row);
-};
 struct Archetype
 {
 	ArchetypeID id;
@@ -172,80 +147,118 @@ public:
 
 		EntityRecord& record = entityRecord[entityID];
 		Archetype* oldArchetype = record.archetype;
-		Type type = oldArchetype->type;
+		Type& oldType = oldArchetype->type;
+		Type newType = oldArchetype->type;
 		auto& oldTable = oldArchetype->table;
-		type.Insert(componentID);
+		newType.Insert(componentID);
 
-		if (typeToArchetype.contains(type))
+		//if (typeToArchetype.contains(newType))
+		//{
+		//	Archetype* newArchetype = &typeToArchetype[newType];
+		//	record.archetype = newArchetype;
+		//	auto& table = newArchetype->table;
+		//	size_t index = record.row;
+
+		//	// Sets the row to the end of column
+		//	record.row = table[0].m_count;
+		//	//std::cout << '\t' << record.row << "\n";
+		//	for (size_t i = 0; i < table.size(); ++i)
+		//	{
+		//		if (newType[i] == componentID)
+		//		{
+		//			table[i].Insert<T>(std::forward<Args>(args)...);
+		//			continue;
+		//		}
+
+		//		Column* oldCol = &oldTable[i];
+		//		if(oldCol)
+		//		{
+		//			memmove(table[i].Insert<T>(), oldCol->Get<T>(record.row), sizeof(T));
+		//			memmove(oldCol->Get<T>(oldCol->m_count--), oldCol->Get<T>(index), sizeof(T));
+		//		}
+		//		else
+		//		{
+		//			table[i].Insert<T>();
+		//		}
+		//	}
+		//}
+		//else
+		//{
+		//	Archetype* newArchetype = &typeToArchetype[newType];
+		//	record.archetype = newArchetype;
+		//	record.row = 0;
+		//	newArchetype->type = newType;
+		//	auto& table = newArchetype->table;
+
+		//	newArchetype->table.reserve(newType.Size());
+		//	for (size_t i = 0; i < newType.Size(); ++i)
+		//	{
+		//		table.push_back(Column(typeid(T), sizeof(T)));
+		//		//std::cout << table[i].newType.name() << "\n";
+		//		if (newType[i] == componentID)
+		//		{
+		//			table[i].Insert<T>(std::forward<Args>(args)...);
+		//			continue;
+		//		}
+
+		//		Column* oldCol = &oldTable[i];
+		//		if (oldCol)
+		//		{
+		//			memmove(table[i].Insert<T>(), oldCol->Get<T>(record.row), sizeof(T));
+		//			memmove(oldCol->Get<T>(oldCol->m_count--), oldCol->Get<T>(record.row), sizeof(T));
+		//		}
+		//		else
+		//		{
+		//			table[i].Insert<T>();
+		//		}
+		//		
+		//	}
+		//	
+		//}
+		bool createNewArchetype = !typeToArchetype.contains(newType);
+
+		Archetype* newArchetype = &typeToArchetype[newType];
+		record.archetype = newArchetype;
+		auto& table = newArchetype->table;
+		size_t oldIndex = record.row;
+
+		int newCompIndex = newType.FindIndexFor(componentID);
+		if (createNewArchetype)
 		{
-			Archetype* newArchetype = &typeToArchetype[type];
-			record.archetype = newArchetype;
-			auto& table = newArchetype->table;
-			size_t index = record.row;
-
-			// Sets the row to the end of column
-			record.row = table[0].m_count;
-			//std::cout << '\t' << record.row << "\n";
-			for (size_t i = 0; i < table.size(); ++i)
+			table.reserve(newType.Size());
+			newArchetype->type = newType;
+			for (int i = 0; i < newType.Size(); ++i)
 			{
-				if (type[i] == componentID)
+				if (i == newCompIndex)
 				{
-					table[i].Insert<T>(std::forward<Args>(args)...);
+					table.emplace_back(Column(typeid(T), sizeof(T)));
 					continue;
 				}
-
-				Column* oldCol = &oldTable[i];
-				if(oldCol)
-				{
-					memmove(table[i].Insert<T>(), oldCol->Get<T>(record.row), sizeof(T));
-					memmove(oldCol->Get<T>(oldCol->m_count--), oldCol->Get<T>(index), sizeof(T));
-				}
-				else
-				{
-					table[i].Insert<T>();
-				}
+				table.emplace_back(Column(oldTable[i].type, oldTable[i].element_size));
 			}
 		}
-		else
+
+		for (int i = 0; i < newType.Size(); ++i)
 		{
-			Archetype* newArchetype = &typeToArchetype[type];
-			record.archetype = newArchetype;
-			record.row = 0;
-			newArchetype->type = type;
-			auto& table = newArchetype->table;
-
-			newArchetype->table.reserve(type.Size());
-			for (size_t i = 0; i < type.Size(); ++i)
+			if (i == newCompIndex)
 			{
-				table.push_back(Column(typeid(T), sizeof(T)));
-				//std::cout << table[i].type.name() << "\n";
-				if (type[i] == componentID)
-				{
-					table[i].Insert<T>(std::forward<Args>(args)...);
-					continue;
-				}
-
-				Column* oldCol = &oldTable[i];
-				if (oldCol)
-				{
-					memmove(table[i].Insert<T>(), oldCol->Get<T>(record.row), sizeof(T));
-					memmove(oldCol->Get<T>(oldCol->m_count--), oldCol->Get<T>(record.row), sizeof(T));
-				}
-				else
-				{
-					table[i].Insert<T>();
-				}
-				
+				table[newCompIndex].Insert<T>(std::forward<Args>(args)...);
+				continue;
 			}
-			
+
+			Column* oldCol = &oldTable[i];
+			table[i].PreallocFor(1);
+			memcpy(table[i].Insert<T>(), oldCol->Get<T>(oldIndex), sizeof(T));
+			//memcpy(oldCol->Get<T>(oldIndex), oldCol->Get<T>(m_count--), sizeof(T)); // We leave this out for now as we dont store wich row has wich entity. So now it simply leaves a hole in the array
 		}
+		record.row = table[0].m_count;
 	}
 
 	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
 	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
 	Kinematics* AddKinematics(EntityID entityID, Vector2 vel = { 0,0 }, Vector2 acc = { 0,0 }, float angularVel = 0.0f, float angularAcc = 0.0f);
 	Collision* AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision = true);
-	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81, float elasticity = 0.6, float staticFriction = 0.4, float dynamicFriction = 0.3);
+	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81, float elasticity = 0.6, float staticFriction = 0.0, float dynamicFriction = 0.0);
 
 
 	void DestroyEntity(EntityID entityID);

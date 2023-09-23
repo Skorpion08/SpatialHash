@@ -4,6 +4,7 @@
 #include "Application.h"
 #include "Vector.h"
 #include "Shape.h"
+#include "Column.h"
 
 
 Application::Application()
@@ -99,25 +100,36 @@ void Application::MainLoop()
 
 
 	EntityID square2 = ecs.CreateEnitity();
-	ecs.AddTransform(square2, { 600,600 });
+	ecs.AddTransform(square2, { 600,400 });
 	ecs.AddKinematics(square2);
 	SDL_Rect dst2(100, 100, 100, 100);
 	ecs.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
 	OBB obb2(100, 100);
 	
-	ecs.AddRigidbody(square2, 60, true, 490, 1);
+	ecs.AddRigidbody(square2, 60, false, 490, 1);
 	ecs.AddCollision(square2, &obb2);
 
 	EntityID square3 = ecs.CreateEnitity();
-	ecs.AddTransform(square3, { 400,600 });
+	ecs.AddTransform(square3, { 400,400 });
 	ecs.AddKinematics(square3);
 	SDL_Rect dst3(100, 100, 100, 100);
 	ecs.AddSprite(square3, nullptr, &dst3, textureManager.Load("resources/square.png"));
 	AABB aabb1(100, 100);
 
-	ecs.AddRigidbody(square3, 50, true, 490);
+	ecs.AddRigidbody(square3, 60, false, 490, 1);
 
 	ecs.AddCollision(square3, &aabb1);
+
+	EntityID square = ecs.CreateEnitity();
+	ecs.AddTransform(square, { 500,400 });
+	ecs.AddKinematics(square);
+	SDL_Rect dst(100, 100, 100, 100);
+	ecs.AddSprite(square, nullptr, &dst, textureManager.Load("resources/square.png"));
+	AABB aabb(100, 100);
+
+	ecs.AddRigidbody(square, 60, false, 490, 1);
+
+	ecs.AddCollision(square, &aabb);
 	/*
 	EntityID swastyka = ecs.CreateEnitity();
 	ecs.AddTransform(swastyka);
@@ -137,6 +149,16 @@ void Application::MainLoop()
 
 	ecs.AddRigidbody(rectangle, 0, false, 0, 1);
 	ecs.AddCollision(rectangle, &aabb2);
+
+	EntityID rectangle2 = ecs.CreateEnitity(Static);
+	ecs.AddTransform(rectangle2, { 400,0 });
+	ecs.AddKinematics(rectangle2);
+	SDL_Rect dstrect2(0, 0, 100000, 100);
+	ecs.AddSprite(rectangle2, nullptr, &dstrect2, textureManager.Load("resources/square.png"));
+	AABB aabb22(100000, 100);
+
+	ecs.AddRigidbody(rectangle2, 0, false, 0, 1);
+	ecs.AddCollision(rectangle2, &aabb22);
 
 	/*
 	EntityID rectangle2 = ecs.CreateEnitity(Dynamic);
@@ -168,153 +190,62 @@ void Application::MainLoop()
 	*/
 
 	EntityID border = ecs.CreateEnitity(Static);
-	ecs.AddTransform(border, { 50000, 700 });
+	ecs.AddTransform(border, { 1000, 700 });
 	SDL_Rect bordeah = { 0,0,100,10000 };
 	ecs.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
 	//ecs.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
 	AABB borderaa(100, 10000);
 	ecs.AddCollision(border, &borderaa);
-	ecs.AddRigidbody(border, 0, false);
+	ecs.AddRigidbody(border, 0, false, 0, 1);
 
-
-	//Archetype arch;
-	//arch.table.push_back(Column(typeid(Transform), sizeof(Transform)));
-	//arch.table.push_back(Column(typeid(Sprite), sizeof(Sprite)));
-	//arch.table.push_back(Column(typeid(Kinematics), sizeof(Kinematics)));
-
-	//arch.table[0].Insert<Transform>();
-	//arch.table[0].Insert<Transform>();
-	//arch.table[0].Insert<Transform>();
-	//arch.table[0].Insert<Transform>();
-	////arch.table[0].Insert<Transform>(Transform());
-
-	//arch.table[1].Insert<Sprite>();
-	//arch.table[1].Insert<Sprite>();
-	//arch.table[1].Insert<Sprite>();
-
-	//arch.table[2].Insert<Kinematics>();
-	//arch.table[2].Insert<Kinematics>();
-
-	//arch.table[2].Get<Kinematics>(0)->vel.x = 10;
-	//printf("\t\t\n %d\n", sizeof(arch.table[0].elements[0]) * arch.table[0].elements.size() + sizeof(arch.table[1].elements[0]) * arch.table[1].elements.size() + sizeof(arch.table[2].elements[0]) * arch.table[2].elements.size());
-
-	//std::cout << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Transform>() << " " << ecs.GetComponentID<Kinematics>() << " " << ecs.GetComponentID<Sprite>() << "\n";
-	/*
-	std::vector<SDL_Rect> s;
-	std::vector<AABB> c;
-	
-	for (int i = 0; i < 50; ++i)
-	{
-		SDL_Rect sqe = { 0,0,100,100 };
-		s.push_back(sqe);
-		AABB av(100, 100);
-		c.push_back(av);
-	}
-	for (int i = 0; i < 50; ++i)
-	{
-		EntityID ent = ecs.CreateEnitity();
-		ecs.AddTransform(ent, { (float)10*i, 0 });
-		ecs.AddKinematics(ent);
-		ecs.AddSprite(ent, nullptr, &s[i], textureManager.Load("resources/square.png"));
-		ecs.AddCollision(ent, &c[i]);
-		ecs.AddRigidbody(ent, 100, true, 100, 0.4);
-		printf("%f\n", (i * 100) / 1e6);
-
-	}
-	*/
+	EntityID border2 = ecs.CreateEnitity(Static);
+	ecs.AddTransform(border2, { 0, 700 });
+	SDL_Rect bordeah2 = { 0,0,100,10000 };
+	ecs.AddSprite(border2, nullptr, &bordeah2, textureManager.Load("resources/square.png"));
+	//ecs.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
+	AABB borderaa2(100, 10000);
+	ecs.AddCollision(border2, &borderaa2);
+	ecs.AddRigidbody(border2, 0, false, 0, 1);
 
 	EntityID testy = ecs.CreateEnitity();
 	EntityID testy2 = ecs.CreateEnitity();
 	EntityID dwa = ecs.CreateEnitity();
 
 	ecs.Add<Transform>(testy, 10, 20);
-	ecs.Add<Transform>(testy2, 20, 50);
-	ecs.Add<Transform>(dwa, 20, 50);
+	//ecs.Add<Transform>(testy2, 20, 50);
+	//ecs.Add<Transform>(dwa, 20, 50);
 
-	struct A {
-		int a;
-		int b;
-		int c;
-	};
+	//struct A {
+	//	int a;
+	//	int b;
+	//	int c;
+	//};
 
-	auto start = std::chrono::high_resolution_clock::now();
-	// 4000 = 1 ms na moim sprzecie
-	for (int i = 0; i < 4000*1; ++i)
-	{
-		ecs.Add<Transform>(ecs.CreateEnitity(), i*5, -i*7);
-		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
-		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
-	}
-		
-	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+	Archetype& arch = typeToArchetype[{ecs.GetComponentID<Transform>()}];
+	//Archetype& arch2 = typeToArchetype[{ecs.GetComponentID<Kinematics>()}];
+	//Archetype& arch3 = typeToArchetype[{ecs.GetComponentID<A>()}];
 
+	//auto start = std::chrono::high_resolution_clock::now();
+	//arch.table[0].PreallocFor(4000);
 
-	start = std::chrono::high_resolution_clock::now();
-	// 4000 = 1 ms na moim sprzecie
-	for (int i = 0; i < 4000 * 10; ++i)
-	{
-		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
-		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
-		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
-	}
-
-	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
-
-	start = std::chrono::high_resolution_clock::now();
-	// 4000 = 1 ms na moim sprzecie
-	for (int i = 0; i < 4000 * 100; ++i)
-	{
-		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
-		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
-		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
-	}
-
-	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
-
-	start = std::chrono::high_resolution_clock::now();
-	// 4000 = 1 ms na moim sprzecie
-	for (int i = 0; i < 4000 * 500; ++i)
-	{
-		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
-		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
-		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
-	}
-
-	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
-
-	start = std::chrono::high_resolution_clock::now();
-	// 4000 = 1 ms na moim sprzecie
-	for (int i = 0; i < 4000 * 1000; ++i)
-	{
-		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
-		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
-		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
-	}
-
-	end = std::chrono::high_resolution_clock::now();duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
-
-	start = std::chrono::high_resolution_clock::now();
-	// 4000 = 1 ms na moim sprzecie
-	for (int i = 0; i < 4000 * 4000; ++i)
-	{
-		ecs.Add<Transform>(ecs.CreateEnitity(), i * 5, -i * 7);
-		/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
-		ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
-	}
-
-	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+	//
+	//// 4000 = 1 ms na moim sprzecie
+	//for (int i = 0; i < 4000; ++i)
+	//{
+	//	ecs.Add<Transform>(ecs.CreateEnitity(), i*5, -i*7);
+	//	/*ecs.Add<Kinematics>(ecs.CreateEnitity(), Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+	//	ecs.Add<A>(ecs.CreateEnitity(), i * 5, -i * 7, i*i);*/
+	//}
+	//	
+	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
 
 	std::cout << "wartosci\n";
 
-	Archetype& arch = typeToArchetype[{ecs.GetComponentID<Transform>()}];
-	Archetype& arch2 = typeToArchetype[{ecs.GetComponentID<Kinematics>()}];
-	Archetype& arch3 = typeToArchetype[{ecs.GetComponentID<A>()}];
-
-	/*std::cout << arch.table[0].Get<Transform>(0)->pos.x << '\n';
-	std::cout << arch.table[0].Get<Transform>(1)->pos.x << '\n';
-	std::cout << arch.table[0].Get<Transform>(1000)->pos.x << '\n';
-	std::cout << arch2.table[0].Get<Kinematics>(999)->vel.x << '\n';
-	std::cout << arch3.table[0].Get<A>(1332)->c << '\n';*/
+	std::cout << arch.table[0].Get<Transform>(0)->pos.x << '\n';
+	//std::cout << arch.table[0].Get<Transform>(1)->pos.x << '\n';
+	//std::cout << arch.table[0].Get<Transform>(1000)->pos.x << '\n';
+	//std::cout << arch2.table[0].Get<Kinematics>(999)->vel.x << '\n';
+	//std::cout << arch3.table[0].Get<A>(1332)->c << '\n';
 	//std::cout << arch.table[0].Get<Transform>(0)->pos.x;
 
 	// Camera code
@@ -354,7 +285,7 @@ void Application::MainLoop()
 				else if (e.key.keysym.sym == SDLK_DOWN)
 				{
 					ecs.GetRegistry().kinematics[square2].acc.y += v;
-					SDL_RenderSetScale(renderer, 0.5, 0.5);
+					//SDL_RenderSetScale(renderer, scaleX, scaleY);
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_o)
@@ -415,8 +346,10 @@ void Application::MainLoop()
 		collisionSystem.SolveCollisions();
 
 		// Camera updating
-		camera.x = ecs.GetRegistry().transforms[square2].pos.x - window.w / 2;
-		camera.y = ecs.GetRegistry().transforms[square2].pos.y - window.h / 2;
+		//camera.x = ecs.GetRegistry().transforms[square2].pos.x - window.w / 2;
+		//camera.y = ecs.GetRegistry().transforms[square2].pos.y - window.h / 2;
+		camera.x = 0;
+		camera.y = 0;
 
 		//ecs.GetRegistry().transforms[rectangle].pos = { 400, 700 };
 		//ecs.GetRegistry().kinematics[rectangle].vel = { 0,0 };

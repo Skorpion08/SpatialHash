@@ -154,6 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Application.cpp" />
+    <ClCompile Include="Source\Column.cpp" />
     <ClCompile Include="Source\EntityManager.cpp" />
     <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -165,6 +166,7 @@
     <ClCompile Include="Source\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Column.h" />
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Shape.h" />
     <ClInclude Include="Source\Type.h" />

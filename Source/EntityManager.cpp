@@ -1,5 +1,8 @@
 #include "EntityManager.h"
 
+#include <SDL.h>
+
+
 EntityID ECS::CreateEnitity(EntityMovability movability)
 {
 	entities.emplace_back(Entity(nextEntityID, true, movability));
