@@ -100,23 +100,23 @@ void Application::MainLoop()
 
 
 	EntityID square2 = ecs.CreateEnitity();
-	ecs.AddTransform(square2, { 600,400 });
+	ecs.AddTransform(square2, { 700,400 });
 	ecs.AddKinematics(square2);
 	SDL_Rect dst2(100, 100, 100, 100);
 	ecs.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
 	OBB obb2(100, 100);
 	
-	ecs.AddRigidbody(square2, 60, false, 490, 1);
+	ecs.AddRigidbody(square2, 60, true, 490, 1);
 	ecs.AddCollision(square2, &obb2);
 
 	EntityID square3 = ecs.CreateEnitity();
-	ecs.AddTransform(square3, { 400,400 });
+	ecs.AddTransform(square3, { 300,400 });
 	ecs.AddKinematics(square3);
 	SDL_Rect dst3(100, 100, 100, 100);
 	ecs.AddSprite(square3, nullptr, &dst3, textureManager.Load("resources/square.png"));
 	AABB aabb1(100, 100);
 
-	ecs.AddRigidbody(square3, 60, false, 490, 1);
+	ecs.AddRigidbody(square3, 60, true, 490, 1);
 
 	ecs.AddCollision(square3, &aabb1);
 
@@ -127,7 +127,7 @@ void Application::MainLoop()
 	ecs.AddSprite(square, nullptr, &dst, textureManager.Load("resources/square.png"));
 	AABB aabb(100, 100);
 
-	ecs.AddRigidbody(square, 60, false, 490, 1);
+	ecs.AddRigidbody(square, 60, true, 490, 1);
 
 	ecs.AddCollision(square, &aabb);
 	/*
@@ -207,47 +207,43 @@ void Application::MainLoop()
 	ecs.AddCollision(border2, &borderaa2);
 	ecs.AddRigidbody(border2, 0, false, 0, 1);
 
-	EntityID testy = ecs.CreateEnitity();
-	EntityID testy2 = ecs.CreateEnitity();
-	EntityID dwa = ecs.CreateEnitity();
-
-	ecs.Add<Transform>(testy, 10, 20);
-	ecs.Add<Transform>(testy2, 21, 51);
-	//ecs.Add<Transform>(dwa, 20, 50);
-
 	struct A {
 		int a;
 		int b;
 		int c;
 	};
+	EntityID e1 = ecs.CreateEnitity();
 
-	ecs.Add<A>(testy,5, 12, 15);
-	ecs.Add<A>(testy2, 6, 13, 16);
-	ecs.Add<Kinematics>(testy);
-	ecs.Add<Kinematics>(testy2);
-
-	Archetype& arch = typeToArchetype[{ecs.GetComponentID<Transform>()}];
-	Archetype& arch2 = typeToArchetype[{ecs.GetComponentID<Kinematics>()}];
-	Archetype& arch3 = typeToArchetype[{ecs.GetComponentID<A>()}];
-
-	Archetype& arch33 = typeToArchetype[{ecs.GetComponentID<Transform>(),ecs.GetComponentID<A>(), ecs.GetComponentID<Kinematics>() }];
-	std::cout << arch33.table[0].Get<Transform>(0)->pos.x << '\n';
-	std::cout << arch33.table[1].Get<A>(0)->b << '\n';
-	std::cout << arch33.table[1].m_count << '\n';
-	std::cout << arch33.table[0].Get<Transform>(1)->pos.x << '\n';
-	std::cout << arch33.table[1].Get<A>(1)->b << '\n';
-	const int t = 4000000;
 	auto start = std::chrono::high_resolution_clock::now();
-	//// 4000 = 1 ms na moim sprzecie
-	for (int i = 0; i < t; ++i)
+	for (int i = 0; i < 4000*1000; ++i)
 	{
 		EntityID e = ecs.CreateEnitity();
-		ecs.Add<Transform>(e, i*5, -i*7);
-		//ecs.Add<A>(e, i * 5, -i * 7, i*i);
-		//ecs.Add<Kinematics>(e, Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+		ecs.Add<A>(e, i, i + 1, i + 2);
+		ecs.Add<Transform>(e, -i*1.5, i * 2);
 	}
-		
-	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Create took: " << duration.count() * 1000 << " ms\n";
+	start = std::chrono::high_resolution_clock::now();
+	int sum = 0;
+	for (int i = 0; i < 4000*1000; ++i)
+	{
+		sum += ecs.Get<A>(e1 + i + 1)->a;
+		sum *= ecs.Get<Transform>(e1 + i + 1)->pos.x;
+	}
+	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Get took: " << duration.count() * 1000 << " ms\n";
+	std::cout << "a sum: " << sum << '\n';
+
+	//const int t = 4000000;
+	//auto start = std::chrono::high_resolution_clock::now();
+	////// 4000 = 1 ms na moim sprzecie
+	//for (int i = 0; i < t; ++i)
+	//{
+	//	EntityID e = ecs.CreateEnitity();
+	//	ecs.Add<Transform>(e, i*5, -i*7);
+	//	//ecs.Add<A>(e, i * 5, -i * 7, i*i);
+	//	//ecs.Add<Kinematics>(e, Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
+	//}
+	//	
+	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
 
 	//std::cout << "wartosci\n";
 
@@ -349,7 +345,6 @@ void Application::MainLoop()
 		//Clear screen
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		SDL_RenderClear(renderer);
-		
 		currentUpdate = SDL_GetTicks();
 		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001;
@@ -372,6 +367,7 @@ void Application::MainLoop()
 		spritesSystem.Render();
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		//SDL_RenderDrawLine(renderer, 0-camera.x, 350-camera.y, 1000-camera.x, 350-camera.y);
 		/*
 		for (int i = 0; i < obb1.vertices.size(); i++)
 		{

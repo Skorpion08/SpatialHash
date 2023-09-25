@@ -1,12 +1,12 @@
-#include "Type.h"
+#include "sorted_vector.h"
 
-void Type::Insert(size_t newElement)
+void sorted_vector::Insert(size_t newElement)
 {
 	auto it = std::lower_bound(m_vector.begin(), m_vector.end(), newElement);
 	m_vector.insert(it, newElement);
 }
 
-int Type::FindIndexFor(int x)
+int sorted_vector::FindIndexFor(int x)
 {
 	int l = 0, r = m_vector.size(), m;
 

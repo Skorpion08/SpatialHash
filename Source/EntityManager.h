@@ -9,12 +9,14 @@
 #include "TextureManager.h"
 #include "Vector.h"
 #include "Shape.h"
-#include "Type.h"
+#include "sorted_vector.h"
 #include "Column.h"
 
 using EntityID = size_t;
 using ComponentID = EntityID;
 using ArchetypeID = EntityID;
+
+using Type = sorted_vector;
 
 enum EntityMovability
 {
@@ -195,6 +197,9 @@ public:
 			//memcpy(oldCol->Get<T>(oldRow), oldCol->Get<T>(m_count--), sizeof(T)); // We leave this out for now as we dont store wich row has wich entity. So now it simply leaves a hole in the array
 		}
 	}
+	
+	template <typename T>
+	T* Get(EntityID entityID);
 
 	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
 	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
@@ -283,4 +288,12 @@ inline T* Column::Get(size_t row)
 		return reinterpret_cast<T*>(elements.data() + row * element_size);
 	}
 	return nullptr;
+}
+
+template<typename T>
+inline T* ECS::Get(EntityID entityID)
+{
+	EntityRecord& record = entityRecord[entityID];
+	return record.archetype->table[record.archetype->type.FindIndexFor(GetComponentID<T>())].Get<T>(record.row);
+	//return nullptr;
 }

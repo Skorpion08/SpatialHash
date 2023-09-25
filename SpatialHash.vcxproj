@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -161,7 +161,7 @@
     <ClCompile Include="Source\Shape.cpp" />
     <ClCompile Include="Source\SpatialHashMap.cpp" />
     <ClCompile Include="Source\TextureManager.cpp" />
-    <ClCompile Include="Source\Type.cpp" />
+    <ClCompile Include="Source\sorted_vector.cpp" />
     <ClCompile Include="Source\Vector.cpp" />
     <ClCompile Include="Source\Window.cpp" />
   </ItemGroup>
@@ -169,7 +169,7 @@
     <ClInclude Include="Source\Column.h" />
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Shape.h" />
-    <ClInclude Include="Source\Type.h" />
+    <ClInclude Include="Source\sorted_vector.h" />
     <ClInclude Include="Source\Vector.h" />
     <ClInclude Include="Source\Application.h" />
     <ClInclude Include="Source\EntityManager.h" />
@@ -181,6 +181,9 @@
     <None Include=".gitattributes" />
     <None Include=".gitignore" />
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

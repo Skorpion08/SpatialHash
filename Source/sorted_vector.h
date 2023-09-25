@@ -3,14 +3,14 @@
 #include <vector>
 #include <algorithm>
 
-class Type
+class sorted_vector
 {
 public:
-    Type() = default;
+    sorted_vector() = default;
 
-    Type(std::initializer_list<size_t>&& initList) : m_vector(std::move(initList)) { std::sort(m_vector.begin(), m_vector.end()); }
+    sorted_vector(std::initializer_list<size_t>&& initList) : m_vector(std::move(initList)) { std::sort(m_vector.begin(), m_vector.end()); }
 
-    bool operator==(const Type& other) const {
+    bool operator==(const sorted_vector& other) const {
         return m_vector == other.m_vector;
     }
 
@@ -29,7 +29,7 @@ private:
 
 struct TypeHash 
 {
-    size_t operator()(const Type& type) const {
+    size_t operator()(const sorted_vector& type) const {
         // Your custom hash implementation here
         size_t hashValue = 0;
         for (size_t i = 0; i < type.Size(); ++i) {

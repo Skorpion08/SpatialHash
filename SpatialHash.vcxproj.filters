@@ -42,7 +42,7 @@
     <ClCompile Include="Source\Log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Type.cpp">
+    <ClCompile Include="Source\sorted_vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Column.cpp">
@@ -74,7 +74,7 @@
     <ClInclude Include="Source\Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Type.h">
+    <ClInclude Include="Source\sorted_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Column.h">
@@ -85,5 +85,8 @@
     <None Include=".gitattributes" />
     <None Include=".gitignore" />
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>
