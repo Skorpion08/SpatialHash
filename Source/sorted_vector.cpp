@@ -8,7 +8,7 @@ void sorted_vector::Insert(size_t newElement)
 
 int sorted_vector::FindIndexFor(int x)
 {
-	int l = 0, r = m_vector.size(), m;
+	int l = 0, r = m_vector.size()-1, m = 0;
 
 	while (l <= r)
 	{

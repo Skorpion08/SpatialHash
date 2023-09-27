@@ -37,7 +37,7 @@ struct Archetype
 	Type type;
 	std::vector<Column> table;
 	std::vector<EntityID> id_table;
-	size_t m_count=0;
+	size_t m_count = 0;
 };
 
 struct EntityRecord
@@ -142,71 +142,7 @@ public:
 	}
 
 	template <typename T, typename... Args>
-	void Add(EntityID entityID, Args&&... args)
-	{
-		if (!entityRecord.contains(entityID))
-			return;
-
-		ComponentID componentID = GetComponentID<T>();
-
-
-		EntityRecord& record = entityRecord[entityID];
-		Archetype* oldArchetype = record.archetype;
-		Type& oldType = oldArchetype->type;
-		Type newType = oldArchetype->type;
-		auto& oldTable = oldArchetype->table;
-		newType.Insert(componentID);
-
-		bool createNewArchetype = !typeToArchetype.contains(newType);
-
-		Archetype* newArchetype = &typeToArchetype[newType];
-		record.archetype = newArchetype;
-		auto& table = newArchetype->table;
-		size_t oldRow = record.row;
-		int newCompIndex = newType.FindIndexFor(componentID);
-
-		// Create a new archetype if we couldn't find one
-		if (createNewArchetype)
-		{
-			table.reserve(newType.Size());
-			newArchetype->type = newType;
-			for (int i = 0; i < newType.Size(); ++i)
-			{
-				if (i == newCompIndex)
-				{
-					table.emplace_back(Column(typeid(T), sizeof(T)));
-					continue;
-				}
-				table.emplace_back(Column(oldTable[i].type, oldTable[i].element_size));
-			}
-		}
-
-		record.row = table[0].m_count;
-
-		// Move over the data
-		for (int i = 0; i < newType.Size(); ++i)
-		{
-			if (i == newCompIndex)
-			{
-				// we push in the new data and add the index
-				table[newCompIndex].Insert<T>(std::move(args)...);
-				newArchetype->id_table.resize(newArchetype->m_count + 1);
-				newArchetype->id_table[newArchetype->m_count++] = entityID;
-				continue;
-			}
-
-			Column* oldCol = &oldTable[i];
-			table[i].PreallocFor(1);
-			memcpy(table[i].GetAddress(table[i].m_count++), oldCol->GetAddress(oldRow), table[i].element_size);
-
-			// Swap the data from the end to the index of moved entity
-			EntityID idToSwap = oldArchetype->id_table[oldCol->m_count - 1];
-			entityRecord[idToSwap].row = oldRow;
-			oldArchetype->id_table[oldRow] = idToSwap;
-			--oldArchetype->m_count;
-			memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(oldCol->element_size));
-		}
-	}
+	void Add(EntityID entityID, Args&&... args);
 	
 	// Meant to be used for a single entity only
 	template <typename T>
@@ -274,41 +210,80 @@ struct CollisionSystem
 	void SolveCollisions();
 };
 
-template<typename T, typename ...Args>
-inline T* Column::Insert(Args && ...args)
+template <typename T, typename... Args>
+void ECS::Add(EntityID entityID, Args&&... args)
 {
-	if (typeid(T) == type)
+	if (!entityRecord.contains(entityID))
+		return;
+
+	ComponentID componentID = GetComponentID<T>();
+
+	EntityRecord& record = entityRecord[entityID];
+	Archetype* oldArchetype = record.archetype;
+	Type& oldType = oldArchetype->type;
+	Type newType = oldArchetype->type;
+	auto& oldTable = oldArchetype->table;
+	newType.Insert(componentID);
+
+	bool createNewArchetype = !typeToArchetype.contains(newType);
+
+	Archetype* newArchetype = &typeToArchetype[newType];
+	record.archetype = newArchetype;
+	auto& table = newArchetype->table;
+	size_t oldRow = record.row;
+	int newCompIndex = newType.FindIndexFor(componentID);
+
+	// Create a new archetype if we couldn't find one
+	if (createNewArchetype)
 	{
-		if (elements.size() + element_size > elements.capacity())
+		table.reserve(newType.Size());
+		newArchetype->type = newType;
+		for (int i = 0; i < newType.Size(); ++i)
 		{
-			elements.reserve(elements.capacity() * 1.5);
+			if (i == newCompIndex)
+			{
+				table.emplace_back(Column(typeid(T), sizeof(T)));
+				continue;
+			}
+			table.emplace_back(Column(oldTable[i].type, oldTable[i].element_size));
 		}
-		elements.resize(elements.size() + element_size);
-		T* elementPtr = reinterpret_cast<T*>(elements.data() + m_count++ * element_size);
-		*elementPtr = T(std::forward<Args>(args)...);
-		return elementPtr;
 	}
-	return nullptr;
-}
 
-template<typename T>
-inline T* Column::Get(size_t row)
-{
-	if (typeid(T) == type)
+	record.row = table[0].m_count;
+
+	// Move over the data
+	for (int i = 0; i < newType.Size(); ++i)
 	{
-		return reinterpret_cast<T*>(elements.data() + row * element_size);
+		if (i == newCompIndex)
+		{
+			// we push in the new data and add the index
+			table[newCompIndex].Insert<T>(std::move(args)...);
+			newArchetype->id_table.resize(newArchetype->m_count + 1);
+			newArchetype->id_table[newArchetype->m_count++] = entityID;
+			continue;
+		}
+
+		Column* oldCol = &oldTable[i];
+		table[i].PreallocFor(1);
+		memcpy(table[i].GetAddress(table[i].m_count++), oldCol->GetAddress(oldRow), table[i].element_size);
+
+		// Swap the data from the end to the index of moved entity
+		EntityID idToSwap = oldArchetype->id_table[oldCol->m_count - 1];
+		entityRecord[idToSwap].row = oldRow;
+		oldArchetype->id_table[oldRow] = idToSwap;
+		--oldArchetype->m_count;
+		memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(oldCol->element_size));
 	}
-	return nullptr;
 }
 
 template<typename T>
-inline T* ECS::Get(EntityID entityID)
+T* ECS::Get(EntityID entityID)
 {
 	EntityRecord& record = entityRecord[entityID];
 	int index = record.archetype->type.FindIndexFor(GetComponentID<T>());
-
 	if (index == -1)
 		return nullptr;
 
 	return record.archetype->table[index].Get<T>(record.row);
 }
+

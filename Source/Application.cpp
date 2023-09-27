@@ -4,7 +4,6 @@
 #include "Application.h"
 #include "Vector.h"
 #include "Shape.h"
-#include "Column.h"
 
 
 Application::Application()
@@ -218,11 +217,13 @@ void Application::MainLoop()
 	EntityID e1 = ecs.CreateEnitity();
 	EntityID e2 = ecs.CreateEnitity();
 	EntityID e3 = ecs.CreateEnitity();
-	ecs.Add<Tag>(e1);
-	std::cout << ecs.Get<Tag>(e1) << '\n';
+	ecs.Add<A>(e1);
+	if(ecs.Get<Tag>(e1) != nullptr)
+		std::cout << ecs.Get<Tag>(e1) << '\n\t';
+
 	std::cout << ecs.Get<A>(e1) << '\n';
 
-
+	
 	//unsigned int n = 4000;
 	//auto start = std::chrono::high_resolution_clock::now();
 	//for (int i = 0; i < n; ++i)
