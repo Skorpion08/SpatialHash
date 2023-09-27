@@ -10,7 +10,7 @@
 Application::Application()
 {
 	window.w = 1000;
-	window.h = 1000;
+	window.h = 700;
 }
 
 Application::~Application()
@@ -92,7 +92,7 @@ void Application::MainLoop()
 
 	bool keyPressed = false;
 
-
+#if 0
 	EntityID fence = ecs.CreateEnitity();
 	ecs.AddTransform(fence);
 	SDL_Rect rectum = { 0,0, 4176 * 2, 960 * 2 };
@@ -106,7 +106,7 @@ void Application::MainLoop()
 	ecs.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
 	OBB obb2(100, 100);
 	
-	ecs.AddRigidbody(square2, 60, true, 490, 1);
+	ecs.AddRigidbody(square2, 100, true, 490, 0.8);
 	ecs.AddCollision(square2, &obb2);
 
 	EntityID square3 = ecs.CreateEnitity();
@@ -116,7 +116,7 @@ void Application::MainLoop()
 	ecs.AddSprite(square3, nullptr, &dst3, textureManager.Load("resources/square.png"));
 	AABB aabb1(100, 100);
 
-	ecs.AddRigidbody(square3, 60, true, 490, 1);
+	ecs.AddRigidbody(square3, 60, true, 490, 0.8);
 
 	ecs.AddCollision(square3, &aabb1);
 
@@ -127,7 +127,7 @@ void Application::MainLoop()
 	ecs.AddSprite(square, nullptr, &dst, textureManager.Load("resources/square.png"));
 	AABB aabb(100, 100);
 
-	ecs.AddRigidbody(square, 60, true, 490, 1);
+	ecs.AddRigidbody(square, 60, true, 490, 0.8);
 
 	ecs.AddCollision(square, &aabb);
 	/*
@@ -206,32 +206,46 @@ void Application::MainLoop()
 	AABB borderaa2(100, 10000);
 	ecs.AddCollision(border2, &borderaa2);
 	ecs.AddRigidbody(border2, 0, false, 0, 1);
-
+#endif
 	struct A {
 		int a;
 		int b;
 		int c;
 	};
+	struct Tag {
+
+	};
 	EntityID e1 = ecs.CreateEnitity();
+	EntityID e2 = ecs.CreateEnitity();
+	EntityID e3 = ecs.CreateEnitity();
+	ecs.Add<Tag>(e1);
+	std::cout << ecs.Get<Tag>(e1) << '\n';
+	std::cout << ecs.Get<A>(e1) << '\n';
 
-	auto start = std::chrono::high_resolution_clock::now();
-	for (int i = 0; i < 4000*1000; ++i)
-	{
-		EntityID e = ecs.CreateEnitity();
-		ecs.Add<A>(e, i, i + 1, i + 2);
-		ecs.Add<Transform>(e, -i*1.5, i * 2);
-	}
-	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Create took: " << duration.count() * 1000 << " ms\n";
-	start = std::chrono::high_resolution_clock::now();
-	int sum = 0;
-	for (int i = 0; i < 4000*1000; ++i)
-	{
-		sum += ecs.Get<A>(e1 + i + 1)->a;
-		sum *= ecs.Get<Transform>(e1 + i + 1)->pos.x;
-	}
-	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Get took: " << duration.count() * 1000 << " ms\n";
-	std::cout << "a sum: " << sum << '\n';
 
+	//unsigned int n = 4000;
+	//auto start = std::chrono::high_resolution_clock::now();
+	//for (int i = 0; i < n; ++i)
+	//{
+	//	EntityID e = ecs.CreateEnitity();
+	//	ecs.Add<A>(e, i, i + 1, i + 2);
+	//	ecs.Add<Transform>(e, -i*1.5, i * 2);
+	//}
+	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Create took: " << duration.count() * 1000 << " ms\n";
+
+	//start = std::chrono::high_resolution_clock::now();
+	//int sum = 0;
+	//A* firsta = ecs.Get<A>(4);
+	//Transform* firstt = ecs.Get<Transform>(4);
+
+	//for (int i = 0; i < n; ++i)
+	//{
+	//	sum += (firsta + i)->a;
+	//	sum *= (firstt + 1)->pos.x;
+	//}
+
+	//end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Get took: " << duration.count() * 1000 << " ms\n";
+	//std::cout << "a sum: " << sum << '\n';
 	//const int t = 4000000;
 	//auto start = std::chrono::high_resolution_clock::now();
 	////// 4000 = 1 ms na moim sprzecie
@@ -272,70 +286,70 @@ void Application::MainLoop()
 				quit = true;
 				break;
 			}
-			else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
-			{
-				if (e.key.keysym.sym == SDLK_LEFT)
-				{
-					ecs.GetRegistry().kinematics[square2].acc.x += -v;
-					keyPressed = true;
-				}
-				else if (e.key.keysym.sym == SDLK_RIGHT)
-				{
-					ecs.GetRegistry().kinematics[square2].acc.x += v;
-					keyPressed = true;
-				}
-				else if (e.key.keysym.sym == SDLK_UP)
-				{
-					ecs.GetRegistry().kinematics[square2].acc.y += -v;
-					SDL_RenderSetScale(renderer, 1, 1);
-					keyPressed = true;
-				}
-				else if (e.key.keysym.sym == SDLK_DOWN)
-				{
-					ecs.GetRegistry().kinematics[square2].acc.y += v;
-					//SDL_RenderSetScale(renderer, scaleX, scaleY);
-					keyPressed = true;
-				}
-				else if (e.key.keysym.sym == SDLK_o)
-				{
-					ecs.GetRegistry().kinematics[square2].angularVel = -b;
-				}
-				else if (e.key.keysym.sym == SDLK_p)
-				{
-					ecs.GetRegistry().kinematics[square2].angularVel = b;
-				}
-			}
-			else if (e.type == SDL_KEYUP && e.key.repeat == 0)
-			{
-				if (e.key.keysym.sym == SDLK_LEFT)
-				{
-					ecs.GetRegistry().kinematics[square2].acc.x -= -v;
-					keyPressed = false;
-				}
-				else if (e.key.keysym.sym == SDLK_RIGHT)
-				{
-					ecs.GetRegistry().kinematics[square2].acc.x -= v;
-					keyPressed = false;
-				}
-				else if (e.key.keysym.sym == SDLK_UP)
-				{
-					ecs.GetRegistry().kinematics[square2].acc.y -= -v;
-					keyPressed = false;
-				}
-				else if (e.key.keysym.sym == SDLK_DOWN)
-				{
-					ecs.GetRegistry().kinematics[square2].acc.y -= v;
-					keyPressed = false;
-				}
-				else if (e.key.keysym.sym == SDLK_o)
-				{
-					ecs.GetRegistry().kinematics[square2].angularVel = 0;
-				}
-				else if (e.key.keysym.sym == SDLK_p)
-				{
-					ecs.GetRegistry().kinematics[square2].angularVel = 0;
-				}
-			}
+			//else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+			//{
+			//	if (e.key.keysym.sym == SDLK_LEFT)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].acc.x += -v;
+			//		keyPressed = true;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_RIGHT)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].acc.x += v;
+			//		keyPressed = true;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_UP)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].acc.y += -v;
+			//		SDL_RenderSetScale(renderer, 1, 1);
+			//		keyPressed = true;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_DOWN)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].acc.y += v;
+			//		//SDL_RenderSetScale(renderer, scaleX, scaleY);
+			//		keyPressed = true;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_o)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].angularVel = -b;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_p)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].angularVel = b;
+			//	}
+			//}
+			//else if (e.type == SDL_KEYUP && e.key.repeat == 0)
+			//{
+			//	if (e.key.keysym.sym == SDLK_LEFT)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].acc.x -= -v;
+			//		keyPressed = false;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_RIGHT)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].acc.x -= v;
+			//		keyPressed = false;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_UP)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].acc.y -= -v;
+			//		keyPressed = false;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_DOWN)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].acc.y -= v;
+			//		keyPressed = false;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_o)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].angularVel = 0;
+			//	}
+			//	else if (e.key.keysym.sym == SDLK_p)
+			//	{
+			//		ecs.GetRegistry().kinematics[square2].angularVel = 0;
+			//	}
+			//}
 			
 		}
 

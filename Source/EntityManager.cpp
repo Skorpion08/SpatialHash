@@ -70,9 +70,6 @@ void ECS::DestroyEntity(EntityID entityID)
 	registry.collisionComponents.erase(entityID);
 }
 
-
-// Test a way to optimize the looping through by instead iterating through the map
-
 void SpriteSystem::Update(Vector2 cameraPos)
 {
 	auto& manager = ECS::GetInstance();

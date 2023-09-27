@@ -36,6 +36,8 @@ struct Archetype
 	ArchetypeID id;
 	Type type;
 	std::vector<Column> table;
+	std::vector<EntityID> id_table;
+	size_t m_count=0;
 };
 
 struct EntityRecord
@@ -186,18 +188,27 @@ public:
 		{
 			if (i == newCompIndex)
 			{
+				// we push in the new data and add the index
 				table[newCompIndex].Insert<T>(std::move(args)...);
+				newArchetype->id_table.resize(newArchetype->m_count + 1);
+				newArchetype->id_table[newArchetype->m_count++] = entityID;
 				continue;
 			}
 
 			Column* oldCol = &oldTable[i];
-			table[i].ResizeFor(1);
+			table[i].PreallocFor(1);
 			memcpy(table[i].GetAddress(table[i].m_count++), oldCol->GetAddress(oldRow), table[i].element_size);
-			//--oldCol->m_count;
-			//memcpy(oldCol->Get<T>(oldRow), oldCol->Get<T>(m_count--), sizeof(T)); // We leave this out for now as we dont store wich row has wich entity. So now it simply leaves a hole in the array
+
+			// Swap the data from the end to the index of moved entity
+			EntityID idToSwap = oldArchetype->id_table[oldCol->m_count - 1];
+			entityRecord[idToSwap].row = oldRow;
+			oldArchetype->id_table[oldRow] = idToSwap;
+			--oldArchetype->m_count;
+			memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(oldCol->element_size));
 		}
 	}
 	
+	// Meant to be used for a single entity only
 	template <typename T>
 	T* Get(EntityID entityID);
 
@@ -294,6 +305,10 @@ template<typename T>
 inline T* ECS::Get(EntityID entityID)
 {
 	EntityRecord& record = entityRecord[entityID];
-	return record.archetype->table[record.archetype->type.FindIndexFor(GetComponentID<T>())].Get<T>(record.row);
-	//return nullptr;
+	int index = record.archetype->type.FindIndexFor(GetComponentID<T>());
+
+	if (index == -1)
+		return nullptr;
+
+	return record.archetype->table[index].Get<T>(record.row);
 }
