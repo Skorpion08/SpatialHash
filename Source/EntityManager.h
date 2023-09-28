@@ -37,7 +37,7 @@ struct Archetype
 	Type type;
 	std::vector<Column> table;
 	std::vector<EntityID> id_table;
-	size_t m_count = 0;
+	size_t entityCount = 0;
 };
 
 struct EntityRecord
@@ -135,7 +135,7 @@ public:
 	EntityID CreateEnitity(EntityMovability movability = Dynamic);
 
 	template <typename T>
-	inline ComponentID GetComponentID()
+	inline ComponentID GetID()
 	{
 		static ComponentID componentID = nextComponentID++;
 		return componentID;
@@ -154,7 +154,8 @@ public:
 	Collision* AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision = true);
 	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81, float elasticity = 0.6, float staticFriction = 0.0, float dynamicFriction = 0.0);
 
-
+	template <typename... Types>
+	Archetype* QueryExact();
 	void DestroyEntity(EntityID entityID);
 
 	inline bool EntityValid(EntityID entityID) { return entityID >= 0 && entityID < NumberOfEntities() && GetEntities()[entityID].active;}
@@ -216,7 +217,7 @@ void ECS::Add(EntityID entityID, Args&&... args)
 	if (!entityRecord.contains(entityID))
 		return;
 
-	ComponentID componentID = GetComponentID<T>();
+	ComponentID componentID = GetID<T>();
 
 	EntityRecord& record = entityRecord[entityID];
 	Archetype* oldArchetype = record.archetype;
@@ -232,7 +233,7 @@ void ECS::Add(EntityID entityID, Args&&... args)
 	auto& table = newArchetype->table;
 	size_t oldRow = record.row;
 	int newCompIndex = newType.FindIndexFor(componentID);
-
+	
 	// Create a new archetype if we couldn't find one
 	if (createNewArchetype)
 	{
@@ -251,28 +252,41 @@ void ECS::Add(EntityID entityID, Args&&... args)
 
 	record.row = table[0].m_count;
 
+	// j is the currently used table index from the previous archetype
+	int j = 0;
 	// Move over the data
 	for (int i = 0; i < newType.Size(); ++i)
 	{
 		if (i == newCompIndex)
 		{
 			// we push in the new data and add the index
-			table[newCompIndex].Insert<T>(std::move(args)...);
-			newArchetype->id_table.resize(newArchetype->m_count + 1);
-			newArchetype->id_table[newArchetype->m_count++] = entityID;
+			table[i].Insert<T>(std::move(args)...);
+			
+			newArchetype->id_table.resize(newArchetype->entityCount + 1);
+			newArchetype->id_table[newArchetype->entityCount++] = entityID;
 			continue;
 		}
 
-		Column* oldCol = &oldTable[i];
-		table[i].PreallocFor(1);
+		Column* oldCol = &oldTable[j];
+
+		// Move data to the new archetype
+		table[i].ResizeFor(1);
 		memcpy(table[i].GetAddress(table[i].m_count++), oldCol->GetAddress(oldRow), table[i].element_size);
 
-		// Swap the data from the end to the index of moved entity
+		// Swap the data from the end to the index of moved entity (only if the entity isn't at the last index)
 		EntityID idToSwap = oldArchetype->id_table[oldCol->m_count - 1];
-		entityRecord[idToSwap].row = oldRow;
-		oldArchetype->id_table[oldRow] = idToSwap;
-		--oldArchetype->m_count;
-		memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(oldCol->element_size));
+		if (idToSwap != entityID)
+		{
+			entityRecord[idToSwap].row = oldRow;
+			oldArchetype->id_table[oldRow] = idToSwap;
+			memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(table[j].element_size));
+		}
+		else
+		{
+			--oldCol->m_count;
+		}
+		++j;
+		--oldArchetype->entityCount;
 	}
 }
 
@@ -280,10 +294,22 @@ template<typename T>
 T* ECS::Get(EntityID entityID)
 {
 	EntityRecord& record = entityRecord[entityID];
-	int index = record.archetype->type.FindIndexFor(GetComponentID<T>());
+	int index = record.archetype->type.FindIndexFor(GetID<T>());
 	if (index == -1)
 		return nullptr;
 
 	return record.archetype->table[index].Get<T>(record.row);
+}
+
+template<typename... Types>
+inline Archetype* ECS::QueryExact()
+{
+	Type queriedType = { GetID<Types>()... };
+	
+	if (typeToArchetype.contains(queriedType))
+	{
+		return &typeToArchetype[queriedType];
+	}
+	return nullptr;
 }
 

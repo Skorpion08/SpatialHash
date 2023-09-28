@@ -22,7 +22,7 @@ struct Column
 
 	inline void PreallocFor(size_t numOfElements) { elements.reserve(elements.capacity() + numOfElements * element_size); }
 
-	inline void ResizeFor(size_t numOfElements) { elements.resize(m_count*element_size + numOfElements * element_size); }
+	inline void ResizeFor(size_t numOfElements) { elements.resize(m_count *element_size + numOfElements * element_size); }
 };
 
 template<typename T, typename ...Args>

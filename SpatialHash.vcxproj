@@ -167,6 +167,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Column.h" />
+    <ClInclude Include="Source\Query.h" />
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Shape.h" />
     <ClInclude Include="Source\sorted_vector.h" />

@@ -207,21 +207,63 @@ void Application::MainLoop()
 	ecs.AddRigidbody(border2, 0, false, 0, 1);
 #endif
 	struct A {
-		int a;
-		int b;
-		int c;
+		int a = 0;
+		int b = 0;
+		int c = 0;
 	};
 	struct Tag {
-
+		bool x = false;
 	};
+	EntityID e0 = ecs.CreateEnitity();
 	EntityID e1 = ecs.CreateEnitity();
 	EntityID e2 = ecs.CreateEnitity();
 	EntityID e3 = ecs.CreateEnitity();
-	ecs.Add<A>(e1);
-	if(ecs.Get<Tag>(e1) != nullptr)
-		std::cout << ecs.Get<Tag>(e1) << '\n\t';
 
-	std::cout << ecs.Get<A>(e1) << '\n';
+	ecs.Add<Transform>(e1, 20, 20);
+	ecs.Add<Transform>(e2, 10, 0);
+	ecs.Add<Transform>(e3, 0, 0);
+	Archetype& arch = typeToArchetype[{ecs.GetID<Transform>()}];
+	ecs.Add<A>(e1);
+	ecs.Add<A>(e2);
+	ecs.Add<A>(e3);
+	ecs.Add<Tag>(e1);
+	Archetype& carch = typeToArchetype[{ecs.GetID<Transform>(), ecs.GetID<A>(), ecs.GetID<Tag>()}];
+	std::cout << ecs.Get<Transform>(e1)->pos.x;
+	
+	//ecs.Add<A>(e1);
+	//uint8_t przed[20] = {0};
+	//uint8_t po[20] = { 0 };
+	//std::cout << ecs.Get<Transform>(e1)->pos.y << '\n';
+	//Archetype& carch = typeToArchetype[{ecs.GetID<Transform>(), ecs.GetID<A>()}];
+	//std::cout <<"->" << carch.table[0].elements.size() << '\n';
+	////for(int i = 0; i < 20; ++i)
+	////	przed[i] = carch.table[0].elements[i];
+	////std::cout<< carch.id_table[0] << "\n\t";
+	//ecs.Add<A>(e2);
+	//std::cout << "->" << carch.table[0].elements.size() << '\n';
+	////for (int i = 0; i < 20; ++i)
+	////	po[i] = carch.table[0].elements[i];
+	//std::cout << ecs.Get<Transform>(e1)->pos.x << '\n';
+	/*	This only breaks in debug and causes heap corruption
+	EntityID e0 = ecs.CreateEnitity();
+	EntityID e1 = ecs.CreateEnitity();
+	EntityID e2 = ecs.CreateEnitity();
+	EntityID e3 = ecs.CreateEnitity();
+
+	ecs.Add<A>(e1);
+	ecs.Add<A>(e3);
+	ecs.Add<A>(e2);
+	ecs.Add<Tag>(e1);
+	ecs.Add<Tag>(e2);
+	ecs.Add<Tag>(e3);
+	ecs.Add<Transform>(e1, 0, 0);
+	*/
+
+	//Archetype* ATag = ecs.QueryExact<A, Tag>();
+	//auto& table = ATag->id_table;
+	//for (int i = 0; i < ATag->entityCount; ++i)
+	//	std::cout << table[i] << " ";
+	//std::cout << ecs.Get<A>(e1) << '\n';
 
 	
 	//unsigned int n = 4000;
