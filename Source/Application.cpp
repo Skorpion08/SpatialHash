@@ -211,107 +211,51 @@ void Application::MainLoop()
 		int b = 0;
 		int c = 0;
 	};
-	struct Tag {
-		bool x = false;
-	};
-	EntityID e0 = ecs.CreateEnitity();
-	EntityID e1 = ecs.CreateEnitity();
-	EntityID e2 = ecs.CreateEnitity();
-	EntityID e3 = ecs.CreateEnitity();
+	struct B{ int x; };
+	struct C{ int x; };
+	struct D{ int x; };
 
-	ecs.Add<Transform>(e1, 20, 20);
-	ecs.Add<Transform>(e2, 10, 0);
-	ecs.Add<Transform>(e3, 0, 0);
-	Archetype& arch = typeToArchetype[{ecs.GetID<Transform>()}];
-	ecs.Add<A>(e1);
-	ecs.Add<A>(e2);
-	ecs.Add<A>(e3);
-	ecs.Add<Tag>(e1);
-	Archetype& carch = typeToArchetype[{ecs.GetID<Transform>(), ecs.GetID<A>(), ecs.GetID<Tag>()}];
-	std::cout << ecs.Get<Transform>(e1)->pos.x;
-	
-	//ecs.Add<A>(e1);
-	//uint8_t przed[20] = {0};
-	//uint8_t po[20] = { 0 };
-	//std::cout << ecs.Get<Transform>(e1)->pos.y << '\n';
-	//Archetype& carch = typeToArchetype[{ecs.GetID<Transform>(), ecs.GetID<A>()}];
-	//std::cout <<"->" << carch.table[0].elements.size() << '\n';
-	////for(int i = 0; i < 20; ++i)
-	////	przed[i] = carch.table[0].elements[i];
-	////std::cout<< carch.id_table[0] << "\n\t";
-	//ecs.Add<A>(e2);
-	//std::cout << "->" << carch.table[0].elements.size() << '\n';
-	////for (int i = 0; i < 20; ++i)
-	////	po[i] = carch.table[0].elements[i];
-	//std::cout << ecs.Get<Transform>(e1)->pos.x << '\n';
-	/*	This only breaks in debug and causes heap corruption
-	EntityID e0 = ecs.CreateEnitity();
-	EntityID e1 = ecs.CreateEnitity();
-	EntityID e2 = ecs.CreateEnitity();
-	EntityID e3 = ecs.CreateEnitity();
 
-	ecs.Add<A>(e1);
-	ecs.Add<A>(e3);
-	ecs.Add<A>(e2);
-	ecs.Add<Tag>(e1);
-	ecs.Add<Tag>(e2);
-	ecs.Add<Tag>(e3);
-	ecs.Add<Transform>(e1, 0, 0);
-	*/
+	//EntityID e0 = ecs.CreateEnitity();
+	//EntityID e1 = ecs.CreateEnitity();
+	//EntityID e2 = ecs.CreateEnitity();
+	//EntityID e3 = ecs.CreateEnitity();
+	//EntityID e4 = ecs.CreateEnitity();
+	//EntityID e5 = ecs.CreateEnitity();
 
-	//Archetype* ATag = ecs.QueryExact<A, Tag>();
-	//auto& table = ATag->id_table;
-	//for (int i = 0; i < ATag->entityCount; ++i)
-	//	std::cout << table[i] << " ";
-	//std::cout << ecs.Get<A>(e1) << '\n';
+	auto start = std::chrono::high_resolution_clock::now();
 
-	
-	//unsigned int n = 4000;
-	//auto start = std::chrono::high_resolution_clock::now();
-	//for (int i = 0; i < n; ++i)
-	//{
-	//	EntityID e = ecs.CreateEnitity();
-	//	ecs.Add<A>(e, i, i + 1, i + 2);
-	//	ecs.Add<Transform>(e, -i*1.5, i * 2);
-	//}
-	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Create took: " << duration.count() * 1000 << " ms\n";
+	for (int i = 0; i < 100000; ++i)
+	{
+		EntityID e = ecs.CreateEnitity();
+		ecs.Add<A>(e, i*1.3);
+		ecs.Add<B>(e, i*0.9);
+		ecs.Add<C>(e, i*-1.1);
+		ecs.Add<D>(e, i*-0.7);
+	}
 
-	//start = std::chrono::high_resolution_clock::now();
-	//int sum = 0;
-	//A* firsta = ecs.Get<A>(4);
-	//Transform* firstt = ecs.Get<Transform>(4);
 
-	//for (int i = 0; i < n; ++i)
-	//{
-	//	sum += (firsta + i)->a;
-	//	sum *= (firstt + 1)->pos.x;
-	//}
+	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Create took: " << duration.count() * 1000 << " ms\n";
 
-	//end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Get took: " << duration.count() * 1000 << " ms\n";
-	//std::cout << "a sum: " << sum << '\n';
-	//const int t = 4000000;
-	//auto start = std::chrono::high_resolution_clock::now();
-	////// 4000 = 1 ms na moim sprzecie
-	//for (int i = 0; i < t; ++i)
-	//{
-	//	EntityID e = ecs.CreateEnitity();
-	//	ecs.Add<Transform>(e, i*5, -i*7);
-	//	//ecs.Add<A>(e, i * 5, -i * 7, i*i);
-	//	//ecs.Add<Kinematics>(e, Vector2{(float)i * 1, (float)-i * 7 }, Vector2{ (float)i*2, (float)-i*5}, 0, 0);
-	//}
-	//	
-	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "It took: " << duration.count() * 1000 << " ms\n";
+	start = std::chrono::high_resolution_clock::now();
+	int sum = 0;
+	A* a = ecs.Get<A>(0);
+	B* bb = ecs.Get<B>(0);
+	C* c = ecs.Get<C>(0);
+	D* dd = ecs.Get<D>(0);
+	for (int i = 0; i < 100000; ++i)
+	{
+		sum += a[i].a;
+		sum += bb[i].x;
+		sum += c[i].x;
+		sum += dd[i].x;
 
-	//std::cout << "wartosci\n";
+	}
 
-	//std::cout << arch.table[0].Get<Transform>(0)->pos.x << '\n';
-	//std::cout << arch.table[0].Get<Transform>(1)->pos.x << '\n';
-	//std::cout << arch22.table[0].Get<Transform>(0)->pos.y << '\n';
-	//std::cout << arch22.table[1].Get<A>(0)->c << '\n';
-	//std::cout << arch.table[0].Get<Transform>(1000)->pos.x << '\n';
-	//std::cout << arch2.table[0].Get<Kinematics>(999)->vel.x << '\n';
-	//std::cout << arch3.table[0].Get<A>(1332)->c << '\n';
-	//std::cout << arch.table[0].Get<Transform>(0)->pos.x;
+	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Get took: " << duration.count() * 1000 << " ms\n";
+	std::cout << sum;
+
+
 
 	// Camera code
 	Vector2 camera;

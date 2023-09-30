@@ -286,8 +286,8 @@ void ECS::Add(EntityID entityID, Args&&... args)
 			--oldCol->m_count;
 		}
 		++j;
-		--oldArchetype->entityCount;
 	}
+	--oldArchetype->entityCount;
 }
 
 template<typename T>

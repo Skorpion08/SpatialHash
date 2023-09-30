@@ -25,6 +25,8 @@ struct Column
 	inline void ResizeFor(size_t numOfElements) { elements.resize(m_count *element_size + numOfElements * element_size); }
 };
 
+// We need to add some safe checks like bound checks etc.
+
 template<typename T, typename ...Args>
 T* Column::Insert(Args && ...args)
 {
