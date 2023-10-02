@@ -35,7 +35,7 @@ struct Archetype
 {
 	ArchetypeID id;
 	Type type;
-	std::vector<Column> table;
+	std::vector<Column> columns;
 	std::vector<EntityID> id_table;
 	size_t entityCount = 0;
 };
@@ -48,6 +48,7 @@ struct EntityRecord
 
 inline std::unordered_map<EntityID, EntityRecord> entityRecord;
 inline std::unordered_map<Type, Archetype, TypeHash> typeToArchetype;
+inline std::unordered_map<ComponentID, std::vector<Archetype*>> componentIndex;
 
 
 struct Sprite
@@ -148,6 +149,16 @@ public:
 	template <typename T>
 	T* Get(EntityID entityID);
 
+	void* GetC(EntityID entityID, ComponentID typeHandle) 
+	{
+		EntityRecord& record = entityRecord[entityID];
+		int index = record.archetype->type.FindIndexFor(typeHandle);
+		if (index == -1)
+			return nullptr;
+
+		return record.archetype->columns[index].GetAddress(record.row);
+	}
+
 	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
 	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
 	Kinematics* AddKinematics(EntityID entityID, Vector2 vel = { 0,0 }, Vector2 acc = { 0,0 }, float angularVel = 0.0f, float angularAcc = 0.0f);
@@ -156,6 +167,10 @@ public:
 
 	template <typename... Types>
 	Archetype* QueryExact();
+
+	template <typename... Types>
+	std::vector<Archetype*> Query();
+
 	void DestroyEntity(EntityID entityID);
 
 	inline bool EntityValid(EntityID entityID) { return entityID >= 0 && entityID < NumberOfEntities() && GetEntities()[entityID].active;}
@@ -223,34 +238,34 @@ void ECS::Add(EntityID entityID, Args&&... args)
 	Archetype* oldArchetype = record.archetype;
 	Type& oldType = oldArchetype->type;
 	Type newType = oldArchetype->type;
-	auto& oldTable = oldArchetype->table;
+	auto& oldTable = oldArchetype->columns;
 	newType.Insert(componentID);
 
 	bool createNewArchetype = !typeToArchetype.contains(newType);
 
 	Archetype* newArchetype = &typeToArchetype[newType];
 	record.archetype = newArchetype;
-	auto& table = newArchetype->table;
+	auto& columns = newArchetype->columns;
 	size_t oldRow = record.row;
 	int newCompIndex = newType.FindIndexFor(componentID);
 	
 	// Create a new archetype if we couldn't find one
 	if (createNewArchetype)
 	{
-		table.reserve(newType.Size());
+		columns.reserve(newType.Size());
 		newArchetype->type = newType;
 		for (int i = 0; i < newType.Size(); ++i)
 		{
 			if (i == newCompIndex)
 			{
-				table.emplace_back(Column(typeid(T), sizeof(T)));
+				columns.emplace_back(Column(typeid(T), sizeof(T)));
 				continue;
 			}
-			table.emplace_back(Column(oldTable[i].type, oldTable[i].element_size));
+			columns.emplace_back(Column(oldTable[i].type, oldTable[i].element_size));
 		}
 	}
 
-	record.row = table[0].m_count;
+	record.row = columns[0].m_count;
 
 	// j is the currently used table index from the previous archetype
 	int j = 0;
@@ -260,7 +275,7 @@ void ECS::Add(EntityID entityID, Args&&... args)
 		if (i == newCompIndex)
 		{
 			// we push in the new data and add the index
-			table[i].Insert<T>(std::move(args)...);
+			columns[i].Insert<T>(std::move(args)...);
 			
 			newArchetype->id_table.resize(newArchetype->entityCount + 1);
 			newArchetype->id_table[newArchetype->entityCount++] = entityID;
@@ -270,8 +285,8 @@ void ECS::Add(EntityID entityID, Args&&... args)
 		Column* oldCol = &oldTable[j];
 
 		// Move data to the new archetype
-		table[i].ResizeFor(1);
-		memcpy(table[i].GetAddress(table[i].m_count++), oldCol->GetAddress(oldRow), table[i].element_size);
+		columns[i].ResizeFor(1);
+		memcpy(columns[i].GetAddress(columns[i].m_count++), oldCol->GetAddress(oldRow), columns[i].element_size);
 
 		// Swap the data from the end to the index of moved entity (only if the entity isn't at the last index)
 		EntityID idToSwap = oldArchetype->id_table[oldCol->m_count - 1];
@@ -279,7 +294,7 @@ void ECS::Add(EntityID entityID, Args&&... args)
 		{
 			entityRecord[idToSwap].row = oldRow;
 			oldArchetype->id_table[oldRow] = idToSwap;
-			memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(table[j].element_size));
+			memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(columns[j].element_size));
 		}
 		else
 		{
@@ -288,6 +303,12 @@ void ECS::Add(EntityID entityID, Args&&... args)
 		++j;
 	}
 	--oldArchetype->entityCount;
+
+	if (createNewArchetype)
+	for (int i = 0; i < newType.Size(); ++i)
+	{
+		componentIndex[newType[i]].emplace_back(newArchetype);
+	}
 }
 
 template<typename T>
@@ -298,7 +319,7 @@ T* ECS::Get(EntityID entityID)
 	if (index == -1)
 		return nullptr;
 
-	return record.archetype->table[index].Get<T>(record.row);
+	return record.archetype->columns[index].Get<T>(record.row);
 }
 
 template<typename... Types>
@@ -313,3 +334,70 @@ inline Archetype* ECS::QueryExact()
 	return nullptr;
 }
 
+template<typename ...Types>
+inline std::vector<Archetype*> ECS::Query()
+{
+	Type queriedType = { GetID<Types>()... };
+	int n = queriedType.Size();
+
+	// We need to find the vector of archetypes with the least amount
+	int min = std::numeric_limits<int>::max();
+
+	// Searched id with the lowest size
+	int id = -1;
+	for (int i = 0; i < n; ++i)
+	{
+		if (!componentIndex.contains(queriedType[i]))
+			return {};
+
+		if (componentIndex[queriedType[i]].size() < min)
+			min = componentIndex[queriedType[i]].size(); id = queriedType[i];
+	}
+
+	std::vector<Archetype*>& archetypes = componentIndex[id];
+	std::vector<Archetype*> result;
+	int k = 1;
+	for (int i = 0; i < archetypes.size(); ++i)
+	{
+		Type& currentType = archetypes[i]->type;
+		Archetype* arch = archetypes[i];
+		int l = arch->type.FindIndexFor(queriedType[0]);
+		int r = arch->type.FindIndexFor(queriedType[queriedType.Size()-1]);
+
+		if (l == -1 || r == -1)
+			continue;
+
+		if (l == r && n == 1)
+		{
+			result.emplace_back(arch);
+			continue;
+		}
+		int s = r - l + 1;
+
+		int misses = s-n, hits = 2;
+
+		if (misses < 0)
+			continue;
+
+		for (int j = l + 1; j < r; ++j)
+		{
+			if (hits == n) result.emplace_back(arch);
+
+			// We can break if we used our misses
+			if (misses < 0) break;
+
+			if (currentType[j] == queriedType[k])
+				++hits;
+			else
+				--misses;
+		}
+	}
+	return result;
+}
+
+// Creates an id for a type handle
+#define getID(type) type##_ID
+
+#define COMPONENT(type) ComponentID getID(type) = ecs.GetID<type>();
+
+#define get(e, type) static_cast<type*>(ecs.GetC(e, getID(type)));

@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <chrono>
+#include <random>
 
 #include "Application.h"
 #include "Vector.h"
@@ -215,48 +216,61 @@ void Application::MainLoop()
 	struct C{ int x; };
 	struct D{ int x; };
 
+	COMPONENT(A);
+	EntityID e0 = ecs.CreateEnitity();
+	EntityID e1 = ecs.CreateEnitity();
+	EntityID e2 = ecs.CreateEnitity();
+	EntityID e3 = ecs.CreateEnitity();
+	EntityID e4 = ecs.CreateEnitity();
+	EntityID e5 = ecs.CreateEnitity();
+	ecs.Add<A>(e0, 12, 2 ,3);
+	ecs.Add<B>(e0);
+	ecs.Add<A>(e1, 1, 12, 33);
 
-	//EntityID e0 = ecs.CreateEnitity();
-	//EntityID e1 = ecs.CreateEnitity();
-	//EntityID e2 = ecs.CreateEnitity();
-	//EntityID e3 = ecs.CreateEnitity();
-	//EntityID e4 = ecs.CreateEnitity();
-	//EntityID e5 = ecs.CreateEnitity();
 
-	auto start = std::chrono::high_resolution_clock::now();
+	std::vector<Archetype*> query = ecs.Query<A>();
 
-	for (int i = 0; i < 100000; ++i)
+	for(int j = 0; j < query.size(); ++j)
 	{
-		EntityID e = ecs.CreateEnitity();
-		ecs.Add<A>(e, i*1.3);
-		ecs.Add<B>(e, i*0.9);
-		ecs.Add<C>(e, i*-1.1);
-		ecs.Add<D>(e, i*-0.7);
+		A* aa = query[j]->columns[query[j]->type.FindIndexFor(ecs.GetID<A>())].Get<A>(0);
+		for (int i = 0; i < query[j]->entityCount; ++i)
+		{
+			std::cout << query[j]->id_table[i] << '\n';
+			std::cout << "\ta: " << aa[i].a << '\n';
+			std::cout << "\tb: " << aa[i].b << '\n';
+			std::cout << "\tc: " << aa[i].c << '\n';
+		}
 	}
 
-
-	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Create took: " << duration.count() * 1000 << " ms\n";
-
-	start = std::chrono::high_resolution_clock::now();
-	int sum = 0;
-	A* a = ecs.Get<A>(0);
-	B* bb = ecs.Get<B>(0);
-	C* c = ecs.Get<C>(0);
-	D* dd = ecs.Get<D>(0);
-	for (int i = 0; i < 100000; ++i)
-	{
-		sum += a[i].a;
-		sum += bb[i].x;
-		sum += c[i].x;
-		sum += dd[i].x;
-
-	}
-
-	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Get took: " << duration.count() * 1000 << " ms\n";
-	std::cout << sum;
-
-
-
+	//std::random_device device;
+	//std::mt19937 mt(device());
+	//std::uniform_int_distribution<int> dist(-1000, 1000);
+	//std::ios::sync_with_stdio(false);
+	//int is = 1000;
+	//for (int i = 0; i < is; ++i)
+	//{
+	//	EntityID e = ecs.CreateEnitity();
+	//	ecs.Add<A>(e, dist(mt), dist(mt), dist(mt));
+	//	ecs.Add<B>(e, dist(mt));
+	//	ecs.Add<C>(e, dist(mt));
+	//	ecs.Add<D>(e, dist(mt));
+	//}
+	//Archetype* arch = ecs.QueryExact<A, B, C, D>();
+	//A* aa = arch->table[0].Get<A>(0);
+	//B* bb = arch->table[1].Get<B>(0);
+	//C* cc = arch->table[2].Get<C>(0);
+	//D* dd = arch->table[3].Get<D>(0);
+	//auto start = std::chrono::high_resolution_clock::now();
+	//int sum = 0;
+	//for (int e = 0; e < is; ++e)
+	//{
+	//	sum += aa[e].a;
+	//	sum *= bb[e].x;
+	//	sum += cc[e].x;
+	//	sum *= dd[e].x;
+	//}
+	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Processing took: " << duration.count() * 1000 << " ms\n";
+	//std::cout << sum;
 	// Camera code
 	Vector2 camera;
 
@@ -354,6 +368,8 @@ void Application::MainLoop()
 		collisionSystem.SolveCollisions();
 
 		// Camera updating
+		// camera.x = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
+		// camera.y = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
 		//camera.x = ecs.GetRegistry().transforms[square2].pos.x - window.w / 2;
 		//camera.y = ecs.GetRegistry().transforms[square2].pos.y - window.h / 2;
 		camera.x = 0;
@@ -364,7 +380,7 @@ void Application::MainLoop()
 		//printf("vel: %f\n", ecs.GetRegistry().kinematics[square2].vel.x);
 		//printf("camera: %f %f\n", camera.x, camera.y);
 		//printf("acc %f %f\n", ecs.GetRegistry().kinematics[square2].acc.x, ecs.GetRegistry().kinematics[square2].acc.y);
-		spritesSystem.Update({ static_cast<float>(camera.x), static_cast<float>(camera.y) });
+		spritesSystem.Update(camera);
 		spritesSystem.Render();
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
