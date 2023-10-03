@@ -207,6 +207,27 @@ void Application::MainLoop()
 	ecs.AddCollision(border2, &borderaa2);
 	ecs.AddRigidbody(border2, 0, false, 0, 1);
 #endif
+
+	class Timer
+	{
+		std::chrono::steady_clock::time_point start, end;
+		std::chrono::duration<double> duration;
+
+	public:
+		void Start()
+		{
+			start = std::chrono::high_resolution_clock::now();
+		}
+
+		void End()
+		{
+			end = std::chrono::high_resolution_clock::now();
+			duration = end - start;
+			double ms = duration.count() * 1000;
+			std::cout << "Timer took " << ms << " ms" << std::endl;
+		}
+	};
+
 	struct A {
 		int a = 0;
 		int b = 0;
@@ -215,32 +236,79 @@ void Application::MainLoop()
 	struct B{ int x; };
 	struct C{ int x; };
 	struct D{ int x; };
+	struct E { int x; };
+	struct F { int x, y, z; }; struct G { int x, y, z, w; }; struct H { int x, y; };
+
+	std::random_device device;
+	std::mt19937 mt(device());
+	std::uniform_int_distribution<int> dist(-100, 100);
+
+
+	for (int i = 0; i < 1000000; ++i)
+	{
+		EntityID e = ecs.CreateEnitity();
+		ecs.AddTransform(e, { static_cast<float>(dist(mt)), static_cast<float>(dist(mt)) });
+		ecs.AddKinematics(e, { static_cast<float>(dist(mt)), static_cast<float>(dist(mt)) });
+	}
+
 
 	COMPONENT(A);
-	EntityID e0 = ecs.CreateEnitity();
-	EntityID e1 = ecs.CreateEnitity();
-	EntityID e2 = ecs.CreateEnitity();
-	EntityID e3 = ecs.CreateEnitity();
-	EntityID e4 = ecs.CreateEnitity();
-	EntityID e5 = ecs.CreateEnitity();
-	ecs.Add<A>(e0, 12, 2 ,3);
-	ecs.Add<B>(e0);
-	ecs.Add<A>(e1, 1, 12, 33);
-
-
-	std::vector<Archetype*> query = ecs.Query<A>();
-
+	COMPONENT(B);
+	//EntityID e0 = ecs.CreateEnitity();
+	//EntityID e1 = ecs.CreateEnitity();
+	//EntityID e2 = ecs.CreateEnitity();
+	//EntityID e3 = ecs.CreateEnitity();
+	//EntityID e4 = ecs.CreateEnitity();
+	//EntityID e5 = ecs.CreateEnitity();
+	//ecs.Add<A>(e0, 12, 2 ,3);
+	//ecs.Add<B>(e0, 1023);
+	//ecs.Add<A>(e1, 1, 12, 33);
+	for (int i = 0; i < 1000000; ++i)
+	{
+		EntityID e = ecs.CreateEnitity();
+		ecs.Add<A>(e, dist(mt), dist(mt), dist(mt));
+		ecs.Add<B>(e, dist(mt));
+		//if (i % 4 == 0)
+		ecs.Add<C>(e, dist(mt));
+		ecs.Add<D>(e, dist(mt));
+		ecs.Add<E>(e, dist(mt));
+		ecs.Add<F>(e, dist(mt), dist(mt), dist(mt));
+		ecs.Add<G>(e, dist(mt), dist(mt), dist(mt));
+		ecs.Add<H>(e, dist(mt), dist(mt));
+	}
+	auto start = std::chrono::high_resolution_clock::now();
+	std::vector<Archetype*> query = ecs.Query<A, B, C, D, F>();
+	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Querying took: " << duration.count() * 1000 << " ms\n";
+	start = std::chrono::high_resolution_clock::now();
+	int sum = 0;
+	componentIndex;
 	for(int j = 0; j < query.size(); ++j)
 	{
 		A* aa = query[j]->columns[query[j]->type.FindIndexFor(ecs.GetID<A>())].Get<A>(0);
+		B* bb = query[j]->columns[query[j]->type.FindIndexFor(ecs.GetID<B>())].Get<B>(0);
 		for (int i = 0; i < query[j]->entityCount; ++i)
 		{
-			std::cout << query[j]->id_table[i] << '\n';
-			std::cout << "\ta: " << aa[i].a << '\n';
-			std::cout << "\tb: " << aa[i].b << '\n';
-			std::cout << "\tc: " << aa[i].c << '\n';
+			aa[i].a += 3;
+			aa[i].b += 10;
+			aa[i].c += 12;
+			bb[i].x += 1;
+			sum += aa[i].a + aa[i].b + aa[i].c + bb[i].x*2;
+
+			//sum += aa[i].b;
+			//sum += aa[i].c;
+			//sum += bb[i].x;
+			// 
+			//std::cout << query[j]->id_table[i] << '\n';
+			//std::cout << "\tA"<< '\n';
+			//std::cout << "\t\ta: " << aa[i].a << '\n';
+			//std::cout << "\t\tb: " << aa[i].b << '\n';
+			//std::cout << "\t\tc: " << aa[i].c << '\n';
+			//std::cout << "\tB" << '\n';
+			//std::cout << "\t\tx: " << bb[i].x << '\n';
 		}
 	}
+	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Processing took: " << duration.count() * 1000 << " ms\n";
+	std::cout << sum;
 
 	//std::random_device device;
 	//std::mt19937 mt(device());
@@ -363,7 +431,9 @@ void Application::MainLoop()
 		currentUpdate = SDL_GetTicks();
 		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001;
+		start = std::chrono::high_resolution_clock::now();
 		transformSystem.Update(deltaTime);
+		end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Transform took: " << duration.count() * 1000 << " ms\n";
 		collisionSystem.Update();
 		collisionSystem.SolveCollisions();
 

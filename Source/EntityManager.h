@@ -248,7 +248,10 @@ void ECS::Add(EntityID entityID, Args&&... args)
 	auto& columns = newArchetype->columns;
 	size_t oldRow = record.row;
 	int newCompIndex = newType.FindIndexFor(componentID);
-	
+
+
+	// j is the currently used table index from the previous archetype
+	int j = 0;
 	// Create a new archetype if we couldn't find one
 	if (createNewArchetype)
 	{
@@ -256,19 +259,21 @@ void ECS::Add(EntityID entityID, Args&&... args)
 		newArchetype->type = newType;
 		for (int i = 0; i < newType.Size(); ++i)
 		{
+			// Add the newly created archetypes to matching id's
+			componentIndex[newType[i]].emplace_back(newArchetype);
+
 			if (i == newCompIndex)
 			{
 				columns.emplace_back(Column(typeid(T), sizeof(T)));
 				continue;
 			}
-			columns.emplace_back(Column(oldTable[i].type, oldTable[i].element_size));
+			columns.emplace_back(Column(oldTable[j].type, oldTable[j].element_size));
+			++j;
 		}
 	}
-
 	record.row = columns[0].m_count;
 
-	// j is the currently used table index from the previous archetype
-	int j = 0;
+	j = 0;
 	// Move over the data
 	for (int i = 0; i < newType.Size(); ++i)
 	{
@@ -303,12 +308,6 @@ void ECS::Add(EntityID entityID, Args&&... args)
 		++j;
 	}
 	--oldArchetype->entityCount;
-
-	if (createNewArchetype)
-	for (int i = 0; i < newType.Size(); ++i)
-	{
-		componentIndex[newType[i]].emplace_back(newArchetype);
-	}
 }
 
 template<typename T>
@@ -356,38 +355,49 @@ inline std::vector<Archetype*> ECS::Query()
 
 	std::vector<Archetype*>& archetypes = componentIndex[id];
 	std::vector<Archetype*> result;
+
+	// Pointer in the queried type
 	int k = 1;
+
 	for (int i = 0; i < archetypes.size(); ++i)
 	{
 		Type& currentType = archetypes[i]->type;
 		Archetype* arch = archetypes[i];
 		int l = arch->type.FindIndexFor(queriedType[0]);
-		int r = arch->type.FindIndexFor(queriedType[queriedType.Size()-1]);
+		int r = arch->type.FindIndexFor(queriedType[n - 1]);
 
 		if (l == -1 || r == -1)
 			continue;
 
-		if (l == r && n == 1)
+		// We can skip under these conditions as we do not need to waste time on slower checks
+		if ((l == r && n == 1) || n == 2)
 		{
 			result.emplace_back(arch);
 			continue;
 		}
+
+		// It's the size of the interval we need to check
 		int s = r - l + 1;
 
 		int misses = s-n, hits = 2;
 
 		if (misses < 0)
 			continue;
+		
+		k = 1; // reset the pointer
 
-		for (int j = l + 1; j < r; ++j)
+		for (int j = l+1; j < r; ++j)
 		{
-			if (hits == n) result.emplace_back(arch);
-
 			// We can break if we used our misses
 			if (misses < 0) break;
 
 			if (currentType[j] == queriedType[k])
+			{
 				++hits;
+				++k;
+				// Add it to result if it passed
+				if (hits == n) result.emplace_back(arch);
+			}
 			else
 				--misses;
 		}
