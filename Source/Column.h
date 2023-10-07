@@ -39,6 +39,7 @@ T* Column::Insert(Args && ...args)
 		}
 		elements.resize(newSize);
 		T* elementPtr = reinterpret_cast<T*>(elements.data() + m_count++ * element_size);
+
 		*elementPtr = T(std::forward<Args>(args)...);
 		return elementPtr;
 	}

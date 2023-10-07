@@ -9,7 +9,8 @@
 
 #include "Window.h"
 #include "TextureManager.h"
-#include "EntityManager.h"
+#include "ECS.h"
+//#include "EntityManager.h"
 
 
 class Application
@@ -36,10 +37,10 @@ private:
 	double deltaTime;
 
 	// ecs stuff
-	ECS& ecs = ECS::GetInstance();
+	//ECS& ecs = ECS::GetInstance();
 	TextureManager& textureManager = TextureManager::GetInstance();
 
-	SpriteSystem spritesSystem;
-	TransformSystem transformSystem;
-	CollisionSystem collisionSystem;
+	//SpriteSystem spritesSystem;
+	//TransformSystem transformSystem;
+	//CollisionSystem collisionSystem;
 };

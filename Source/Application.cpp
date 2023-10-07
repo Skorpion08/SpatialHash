@@ -7,6 +7,7 @@
 #include "Shape.h"
 
 
+
 Application::Application()
 {
 	window.w = 1000;
@@ -208,26 +209,6 @@ void Application::MainLoop()
 	ecs.AddRigidbody(border2, 0, false, 0, 1);
 #endif
 
-	class Timer
-	{
-		std::chrono::steady_clock::time_point start, end;
-		std::chrono::duration<double> duration;
-
-	public:
-		void Start()
-		{
-			start = std::chrono::high_resolution_clock::now();
-		}
-
-		void End()
-		{
-			end = std::chrono::high_resolution_clock::now();
-			duration = end - start;
-			double ms = duration.count() * 1000;
-			std::cout << "Timer took " << ms << " ms" << std::endl;
-		}
-	};
-
 	struct A {
 		int a = 0;
 		int b = 0;
@@ -243,32 +224,18 @@ void Application::MainLoop()
 	std::mt19937 mt(device());
 	std::uniform_int_distribution<int> dist(-100, 100);
 
-
-	for (int i = 0; i < 1000000; ++i)
-	{
-		EntityID e = ecs.CreateEnitity();
-		ecs.AddTransform(e, { static_cast<float>(dist(mt)), static_cast<float>(dist(mt)) });
-		ecs.AddKinematics(e, { static_cast<float>(dist(mt)), static_cast<float>(dist(mt)) });
-	}
-
-
 	COMPONENT(A);
 	COMPONENT(B);
-	//EntityID e0 = ecs.CreateEnitity();
-	//EntityID e1 = ecs.CreateEnitity();
-	//EntityID e2 = ecs.CreateEnitity();
-	//EntityID e3 = ecs.CreateEnitity();
-	//EntityID e4 = ecs.CreateEnitity();
-	//EntityID e5 = ecs.CreateEnitity();
-	//ecs.Add<A>(e0, 12, 2 ,3);
-	//ecs.Add<B>(e0, 1023);
-	//ecs.Add<A>(e1, 1, 12, 33);
+	TAG(Enemy);
+	std::cout << entityRecord[getID(A)].archetype->columns[0].Get<Data>(entityRecord[getID(A)].row)->size;
+	EntityID e1 = ECS::CreateEnitity();
+
+#if 0
 	for (int i = 0; i < 1000000; ++i)
 	{
 		EntityID e = ecs.CreateEnitity();
 		ecs.Add<A>(e, dist(mt), dist(mt), dist(mt));
 		ecs.Add<B>(e, dist(mt));
-		//if (i % 4 == 0)
 		ecs.Add<C>(e, dist(mt));
 		ecs.Add<D>(e, dist(mt));
 		ecs.Add<E>(e, dist(mt));
@@ -278,7 +245,7 @@ void Application::MainLoop()
 	}
 	auto start = std::chrono::high_resolution_clock::now();
 	std::vector<Archetype*> query = ecs.Query<A, B, C, D, F>();
-	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Querying took: " << duration.count() * 1000 << " ms\n";
+	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double, std::milli> duration = end - start; std::cout << "Querying took: " << duration.count() << " ms\n";
 	start = std::chrono::high_resolution_clock::now();
 	int sum = 0;
 	componentIndex;
@@ -307,9 +274,9 @@ void Application::MainLoop()
 			//std::cout << "\t\tx: " << bb[i].x << '\n';
 		}
 	}
-	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Processing took: " << duration.count() * 1000 << " ms\n";
+	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Processing took: " << duration.count() << " ms\n";
 	std::cout << sum;
-
+#endif
 	//std::random_device device;
 	//std::mt19937 mt(device());
 	//std::uniform_int_distribution<int> dist(-1000, 1000);
@@ -431,11 +398,9 @@ void Application::MainLoop()
 		currentUpdate = SDL_GetTicks();
 		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001;
-		start = std::chrono::high_resolution_clock::now();
-		transformSystem.Update(deltaTime);
-		end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Transform took: " << duration.count() * 1000 << " ms\n";
-		collisionSystem.Update();
-		collisionSystem.SolveCollisions();
+		//transformSystem.Update(deltaTime);
+		//collisionSystem.Update();
+		//collisionSystem.SolveCollisions();
 
 		// Camera updating
 		// camera.x = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
@@ -450,8 +415,9 @@ void Application::MainLoop()
 		//printf("vel: %f\n", ecs.GetRegistry().kinematics[square2].vel.x);
 		//printf("camera: %f %f\n", camera.x, camera.y);
 		//printf("acc %f %f\n", ecs.GetRegistry().kinematics[square2].acc.x, ecs.GetRegistry().kinematics[square2].acc.y);
-		spritesSystem.Update(camera);
-		spritesSystem.Render();
+
+		//spritesSystem.Update(camera);
+		//spritesSystem.Render();
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		//SDL_RenderDrawLine(renderer, 0-camera.x, 350-camera.y, 1000-camera.x, 350-camera.y);

@@ -155,7 +155,7 @@
   <ItemGroup>
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\Column.cpp" />
-    <ClCompile Include="Source\EntityManager.cpp" />
+    <ClCompile Include="Source\ECS.cpp" />
     <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Shape.cpp" />
@@ -167,13 +167,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Column.h" />
+    <ClInclude Include="Source\ECS.h" />
     <ClInclude Include="Source\Query.h" />
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Shape.h" />
     <ClInclude Include="Source\sorted_vector.h" />
     <ClInclude Include="Source\Vector.h" />
     <ClInclude Include="Source\Application.h" />
-    <ClInclude Include="Source\EntityManager.h" />
     <ClInclude Include="Source\SpatialHashMap.h" />
     <ClInclude Include="Source\TextureManager.h" />
     <ClInclude Include="Source\Window.h" />

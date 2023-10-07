@@ -3,40 +3,25 @@
 #include <vector>
 #include <unordered_map>
 #include <typeinfo>
-#include <typeindex>
 #include <iostream>
 
-#include "TextureManager.h"
-#include "Vector.h"
-#include "Shape.h"
 #include "sorted_vector.h"
 #include "Column.h"
 
-using EntityID = size_t;
-using ComponentID = EntityID;
-using ArchetypeID = EntityID;
+using ID = uint64_t;
+using EntityID = ID;
+using ArchetypeID = ID;
 
 using Type = sorted_vector;
-
-enum EntityMovability
-{
-	Dynamic,
-	Static
-};
-
-struct Entity
-{
-	EntityID id;
-	bool active;
-	EntityMovability movability;
-};
 
 struct Archetype
 {
 	ArchetypeID id;
 	Type type;
-	std::vector<Column> columns;
+
 	std::vector<EntityID> id_table;
+	// TO DO: Store columns in a pointer so archetypes with tag point to the same column
+	std::vector<Column> columns;
 	size_t entityCount = 0;
 };
 
@@ -48,122 +33,43 @@ struct EntityRecord
 
 inline std::unordered_map<EntityID, EntityRecord> entityRecord;
 inline std::unordered_map<Type, Archetype, TypeHash> typeToArchetype;
-inline std::unordered_map<ComponentID, std::vector<Archetype*>> componentIndex;
-
-
-struct Sprite
-{
-	SDL_Rect* src;
-	SDL_Rect* dst;
-	Texture* texture;
-};
-
-struct Transform
-{
-	Transform() = default;
-	Transform(float posX, float posY) : pos(posX, posY) {}
-	Transform(Vector2 _pos, float _rotation, Vector2 _scale) : pos(_pos), rotation(_rotation), scale(_scale) {}
-	Vector2 pos;
-	float rotation;
-	Vector2 scale;
-};
-
-struct Kinematics
-{
-	Vector2 vel;
-	Vector2 acc;
-
-	float angularVel;
-	float angularAcc;
-};
-
-struct Rigidbody // All forces are in N
-{
-	float mass;
-
-	bool enableGravity;
-	float gravityAcc;
-
-	float elasticity;
-
-	float staticFriction;
-	float dynamicFriction;
-
-	Vector2 resultantForce;
-	Vector2 constForces;
-	//float torque;
-	//float momentOfInertia;
-};
-
-struct Collision
-{
-	Shape2D* collider;
-	bool blockCollision;
-};
+inline std::unordered_map<ID, std::vector<Archetype*>> componentIndex;
 
 struct World
 {
 	//std::vector<>
 };
 
-
-// Holds what components entities use
-struct Registry
+inline EntityID nextEntityID = 0;
+namespace ECS
 {
-	std::unordered_map<EntityID, Sprite> sprites;
-	std::unordered_map<EntityID, Transform> transforms;
-	std::unordered_map<EntityID, Kinematics> kinematics;
-	std::unordered_map<EntityID, Collision> collisionComponents;
-	std::unordered_map<EntityID, Rigidbody> rigidbodies;
-};
-class ECS
-{
-	ECS() : nextEntityID(0) {}
-
-public:
-	// Prevent copying
-	ECS(ECS const&) = delete;
-	ECS& operator=(ECS const&) = delete;
-
-
-	static ECS& GetInstance()
-	{
-		static ECS instance;
-		return instance;
-	}
 
 	// Returns its ID
-	EntityID CreateEnitity(EntityMovability movability = Dynamic);
+	EntityID CreateEnitity();
 
-	template <typename T>
-	inline ComponentID GetID()
+	//template <typename T>
+	//inline ComponentID GetID()
+	//{
+	//	static ComponentID componentID = nextComponentID++;
+	//	return componentID;
+	//}
+
+	inline ID NewID()
 	{
-		static ComponentID componentID = nextComponentID++;
-		return componentID;
+		return nextEntityID++;
 	}
+
+	// For tags
+	void Add(EntityID entityID, ID newID);
 
 	template <typename T, typename... Args>
 	void Add(EntityID entityID, Args&&... args);
 	
 	// Meant to be used for a single entity only
 	template <typename T>
-	T* Get(EntityID entityID);
+	inline T* Get(EntityID entityID);
 
-	void* GetC(EntityID entityID, ComponentID typeHandle) 
-	{
-		EntityRecord& record = entityRecord[entityID];
-		int index = record.archetype->type.FindIndexFor(typeHandle);
-		if (index == -1)
-			return nullptr;
-
-		return record.archetype->columns[index].GetAddress(record.row);
-	}
-
-	Sprite* AddSprite(EntityID entityID, SDL_Rect* src, SDL_Rect* dst, Texture* texture);
-	Transform* AddTransform(EntityID entityID, Vector2 position = { 0,0 }, float rotation = 0.0f, Vector2 scale = { 0,0 });
-	Kinematics* AddKinematics(EntityID entityID, Vector2 vel = { 0,0 }, Vector2 acc = { 0,0 }, float angularVel = 0.0f, float angularAcc = 0.0f);
-	Collision* AddCollision(EntityID entityID, Shape2D* collider, bool blockCollision = true);
-	Rigidbody* AddRigidbody(EntityID entityID, float mass, bool enableGravity, float gravityAcc = 9.81, float elasticity = 0.6, float staticFriction = 0.0, float dynamicFriction = 0.0);
+	void* Get(EntityID entityID, ID id);
 
 	template <typename... Types>
 	Archetype* QueryExact();
@@ -171,59 +77,7 @@ public:
 	template <typename... Types>
 	std::vector<Archetype*> Query();
 
-	void DestroyEntity(EntityID entityID);
-
-	inline bool EntityValid(EntityID entityID) { return entityID >= 0 && entityID < NumberOfEntities() && GetEntities()[entityID].active;}
-
-	inline size_t NumberOfEntities() { return entities.size(); }
-
-	inline std::vector<Entity>& GetEntities() { return entities; }
-
-	inline Registry& GetRegistry() { return registry; }
-
-private:
-	EntityID nextEntityID;
-	ComponentID nextComponentID;
-	
-	std::vector<Entity> entities;
-	Registry registry;
-};
-
-// Systems:
-
-struct SpriteSystem
-{
-	// Update all sprites
-	void Update(Vector2 cameraPos = { 0,0 });
-
-	void Render();
-};
-
-struct TransformSystem
-{
-	// Applies velocity
-	void Update(double deltaTime);
-
-	void SetScale(EntityID entityID, Vector2 newScale);
-};
-
-struct CollisionInfo
-{
-	bool overlap;
-	Vector2 mtv;
-};
-
-struct CollisionSystem
-{
-	void Update();
-
-	// Takes in two aabbs
-	CollisionInfo AABBtoAABB(AABB& a, AABB& b);
-	CollisionInfo POLYtoPOLY(Shape2D& shapeA, Shape2D& shapeB);
-
-	//CollisionInfo& CIRCLEtoCIRCLE(Circle& a, Circle& b);
-	//CollisionInfo& CIRCLEtoCIRCLE(Circle& a, Circle& b);
-	void SolveCollisions();
+	void InitComponent(ID component, const std::type_info& ti, uint32_t size);
 };
 
 template <typename T, typename... Args>
@@ -232,7 +86,7 @@ void ECS::Add(EntityID entityID, Args&&... args)
 	if (!entityRecord.contains(entityID))
 		return;
 
-	ComponentID componentID = GetID<T>();
+	ID componentID = getID(T);
 
 	EntityRecord& record = entityRecord[entityID];
 	Archetype* oldArchetype = record.archetype;
@@ -311,7 +165,7 @@ void ECS::Add(EntityID entityID, Args&&... args)
 }
 
 template<typename T>
-T* ECS::Get(EntityID entityID)
+inline T* ECS::Get(EntityID entityID)
 {
 	EntityRecord& record = entityRecord[entityID];
 	int index = record.archetype->type.FindIndexFor(GetID<T>());
@@ -408,6 +262,15 @@ inline std::vector<Archetype*> ECS::Query()
 // Creates an id for a type handle
 #define getID(type) type##_ID
 
-#define COMPONENT(type) ComponentID getID(type) = ecs.GetID<type>();
+struct Data
+{
+	uint32_t size;
+};
 
-#define get(e, type) static_cast<type*>(ecs.GetC(e, getID(type)));
+inline const ID getID(Data) = ECS::NewID();
+
+#define COMPONENT(type) ID getID(type) = ECS::NewID(); ECS::InitComponent(getID(type), typeid(type), sizeof(type));
+
+#define TAG(name) ID name = ECS::NewID();
+
+#define get(e, type) static_cast<type*>(ECS::Get(e, getID(type)));
