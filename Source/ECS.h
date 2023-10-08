@@ -23,6 +23,9 @@ struct Archetype
 	// TO DO: Store columns in a pointer so archetypes with tag point to the same column
 	std::vector<Column> columns;
 	size_t entityCount = 0;
+
+	// Number of data entities attached to it
+	uint16_t dataCount = 0;
 };
 
 struct EntityRecord
@@ -45,7 +48,7 @@ namespace ECS
 {
 
 	// Returns its ID
-	EntityID CreateEnitity();
+	EntityID NewEnitity();
 
 	//template <typename T>
 	//inline ComponentID GetID()
@@ -59,11 +62,11 @@ namespace ECS
 		return nextEntityID++;
 	}
 
-	// For tags
+	// It adds an id and doesnt call the constructor
 	void Add(EntityID entityID, ID newID);
 
 	template <typename T, typename... Args>
-	void Add(EntityID entityID, Args&&... args);
+	void Add(EntityID entityID, ID componentID, Args&&... args);
 	
 	// Meant to be used for a single entity only
 	template <typename T>
@@ -71,22 +74,38 @@ namespace ECS
 
 	void* Get(EntityID entityID, ID id);
 
+	bool Has(EntityID entity, ID id);
+
 	template <typename... Types>
 	Archetype* QueryExact();
+
+	std::vector<Archetype*> Query(Type&& queriedType);
 
 	template <typename... Types>
 	std::vector<Archetype*> Query();
 
-	void InitComponent(ID component, const std::type_info& ti, uint32_t size);
+	// Returns the id for a new component
+	ID InitComponent(const std::type_info& ti, uint32_t size);
 };
 
+
+#define getID(type) type##_ID
+
+struct Data
+{
+	const std::type_info& ti;
+	uint32_t size;
+};
+
+inline const ID getID(Data) = ECS::NewID();
+
 template <typename T, typename... Args>
-void ECS::Add(EntityID entityID, Args&&... args)
+void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 {
 	if (!entityRecord.contains(entityID))
 		return;
 
-	ID componentID = getID(T);
+	//ID componentID = getID(T);
 
 	EntityRecord& record = entityRecord[entityID];
 	Archetype* oldArchetype = record.archetype;
@@ -116,6 +135,8 @@ void ECS::Add(EntityID entityID, Args&&... args)
 			// Add the newly created archetypes to matching id's
 			componentIndex[newType[i]].emplace_back(newArchetype);
 
+			if (!Has(newType[i], getID(Data))) continue;
+
 			if (i == newCompIndex)
 			{
 				columns.emplace_back(Column(typeid(T), sizeof(T)));
@@ -125,16 +146,18 @@ void ECS::Add(EntityID entityID, Args&&... args)
 			++j;
 		}
 	}
-	record.row = columns[0].m_count;
+	record.row = newArchetype->entityCount;
 
 	j = 0;
 	// Move over the data
 	for (int i = 0; i < newType.Size(); ++i)
 	{
+		if (!Has(newType[i], getID(Data))) continue;
+
 		if (i == newCompIndex)
 		{
 			// we push in the new data and add the index
-			columns[i].Insert<T>(std::move(args)...);
+			columns[i].PushBack<T>(std::move(args)...);
 			
 			newArchetype->id_table.resize(newArchetype->entityCount + 1);
 			newArchetype->id_table[newArchetype->entityCount++] = entityID;
@@ -186,6 +209,7 @@ inline Archetype* ECS::QueryExact()
 	}
 	return nullptr;
 }
+
 
 template<typename ...Types>
 inline std::vector<Archetype*> ECS::Query()
@@ -260,17 +284,16 @@ inline std::vector<Archetype*> ECS::Query()
 }
 
 // Creates an id for a type handle
-#define getID(type) type##_ID
 
-struct Data
-{
-	uint32_t size;
-};
+#define COMPONENT(type) ID getID(type) = ECS::InitComponent(typeid(type), sizeof(type));
 
-inline const ID getID(Data) = ECS::NewID();
+#define TAG(name) ID name = ECS::NewEnitity();
 
-#define COMPONENT(type) ID getID(type) = ECS::NewID(); ECS::InitComponent(getID(type), typeid(type), sizeof(type));
+#define get(e, type) static_cast<type*>(ECS::Get(e, getID(type)))
 
-#define TAG(name) ID name = ECS::NewID();
 
-#define get(e, type) static_cast<type*>(ECS::Get(e, getID(type)));
+#define AddTag(e, name) ECS::Add(e, name)
+// Doesn't invoke the constructor
+#define AddID(e, id) ECS::Add(e, id)
+// Invokes the constructor (uses templates)
+#define AddData(e, type, ...) ECS::Add<type>(e, getID(type), __VA_ARGS__)
