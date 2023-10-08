@@ -152,7 +152,6 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 	// Move over the data
 	for (int i = 0; i < newType.Size(); ++i)
 	{
-		if (!Has(newType[i], getID(Data))) continue;
 
 		if (i == newCompIndex)
 		{
@@ -160,9 +159,10 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 			columns[i].PushBack<T>(std::move(args)...);
 			
 			newArchetype->id_table.resize(newArchetype->entityCount + 1);
-			newArchetype->id_table[newArchetype->entityCount++] = entityID;
+			newArchetype->id_table[newArchetype->entityCount] = entityID;
 			continue;
 		}
+		if (!Has(newType[i], getID(Data))) continue;
 
 		Column* oldCol = &oldTable[j];
 
@@ -171,7 +171,7 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 		memcpy(columns[i].GetAddress(columns[i].m_count++), oldCol->GetAddress(oldRow), columns[i].element_size);
 
 		// Swap the data from the end to the index of moved entity (only if the entity isn't at the last index)
-		EntityID idToSwap = oldArchetype->id_table[oldCol->m_count - 1];
+		EntityID idToSwap = oldArchetype->id_table[oldArchetype->entityCount-1];
 		if (idToSwap != entityID)
 		{
 			entityRecord[idToSwap].row = oldRow;
@@ -185,6 +185,7 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 		++j;
 	}
 	--oldArchetype->entityCount;
+	++newArchetype->entityCount;
 }
 
 template<typename T>
@@ -294,6 +295,6 @@ inline std::vector<Archetype*> ECS::Query()
 
 #define AddTag(e, name) ECS::Add(e, name)
 // Doesn't invoke the constructor
-#define AddID(e, id) ECS::Add(e, id)
+#define AddType(e, id) ECS::Add(e, getID(id))
 // Invokes the constructor (uses templates)
 #define AddData(e, type, ...) ECS::Add<type>(e, getID(type), __VA_ARGS__)

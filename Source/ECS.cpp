@@ -77,17 +77,21 @@ void ECS::Add(EntityID entityID, ID newID)
 	// Move over the data
 	for (int i = 0; i < newType.Size(); ++i)
 	{
-		if (!Has(newType[i], getID(Data))) continue;
-
+		// Shit breaks when a tag is the one we're adding
 		if (i == newIDIndex)
 		{
 			// Make space for our component without any set values
-			columns[i].ResizeFor(1);
+			if (Has(newType[i], getID(Data)))
+			{
+				columns[i].ResizeFor(1);
+				++columns[i].m_count;
+			}
 
 			newArchetype->id_table.resize(newArchetype->entityCount + 1);
 			newArchetype->id_table[newArchetype->entityCount] = entityID;
 			continue;
 		}
+		if (!Has(newType[i], getID(Data))) continue;
 
 		Column* oldCol = &oldTable[j];
 
@@ -96,12 +100,12 @@ void ECS::Add(EntityID entityID, ID newID)
 		memcpy(columns[i].GetAddress(columns[i].m_count++), oldCol->GetAddress(oldRow), columns[i].element_size);
 
 		// Swap the data from the end to the index of moved entity (only if the entity isn't at the last index)
-		EntityID idToSwap = oldArchetype->id_table[oldCol->m_count - 1];
+		EntityID idToSwap = oldArchetype->id_table[oldArchetype->entityCount - 1];
 		if (idToSwap != entityID)
 		{
 			entityRecord[idToSwap].row = oldRow;
 			oldArchetype->id_table[oldRow] = idToSwap;
-			memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(columns[j].element_size));
+			memmove(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(columns[j].element_size));
 		}
 		else
 		{
@@ -162,7 +166,7 @@ std::vector<Archetype*> ECS::Query(Type&& queriedType)
 		int l = arch->type.FindIndexFor(queriedType[0]);
 		int r = arch->type.FindIndexFor(queriedType[n - 1]);
 
-		if (l == -1 || r == -1)
+		if (l == -1 || r == -1 || arch->entityCount <= 0)
 			continue;
 
 		// We can skip under these conditions as we do not need to waste time on slower checks

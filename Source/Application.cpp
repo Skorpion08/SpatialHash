@@ -226,6 +226,7 @@ void Application::MainLoop()
 	std::mt19937 mt(device());
 	std::uniform_int_distribution<int> dist(-100, 100);
 	COMPONENT(A);
+	COMPONENT(B);
 	TAG(Enemy);
 	
 	EntityID e1 = ECS::NewEnitity();
@@ -235,41 +236,39 @@ void Application::MainLoop()
 	AddData(e1, A, 0, 0, 0);
 	AddData(e2, A, 1, 2, 3);
 	auto start = std::chrono::high_resolution_clock::now();
-	//for (int i = 0; i < 10; ++i)
-	//{
-	//	EntityID e = ECS::NewEnitity();
-	//	//AddData(e, A, i*2, i * 3, i * 4);
-	//	AddData(e, A, dist(mt), dist(mt), dist(mt));
-	//	//if (i % 4 == 0)
-	//	//{
-	//	//	AddTag(e, Enemy);
-	//	//}
-	//}
+	for (int i = 0; i < 4000; ++i)
+	{
+		EntityID e0 = ECS::NewEnitity();
+		//AddData(e, A, i*2, i * 3, i * 4);
+		AddData(e0, A, dist(mt), dist(mt), dist(mt));
+		if (i % 4 == 0)
+		{
+			AddTag(e0, Enemy);
+		}
+		if (i % 16 == 0)
+		{
+			AddType(e0, B);
+		}
+	}
 	auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Setup took: " << duration.count() * 1000 << " ms\n";
 	start = std::chrono::high_resolution_clock::now();
 	auto query = ECS::Query({ A_ID });
 	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Querying took: " << duration.count() * 1000 << " ms\n";
 	start = std::chrono::high_resolution_clock::now();
-	/*int sum = 0;
+	int sum = 0;
 	for (int i = 0; i < query.size(); ++i)
 	{
-		A* aa = query[i]->columns[0].Get<A>(0);
+		A* aa = query[i]->columns[query[i]->type.FindIndexFor(getID(A))].Get<A>(0);
 		for (int j = 0; j < query[i]->columns[0].m_count; ++j)
 		{
 			sum += aa[j].a;
 			sum -= aa[j].b;
 			sum += aa[j].c;
 		}
-	}*/
+	}
 
 	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Processing took: " << duration.count() * 1000 << " ms\n";
-	//std::cout << sum << '\n';
-
-	std::cout << query[0]->columns[0].Get<A>(0)->a << '\n';
-	std::cout << query[0]->columns[0].Get<A>(1)->a << '\n';
-	query[0]->columns[0].Destroy<A>(0);
-	std::cout<<query[0]->columns[0].Get<A>(0)->a << '\n';
-	std::cout << query[0]->columns[0].Get<A>(1)->a << '\n';
+	std::cout << sum << '\n';
 #if 0
 	for (int i = 0; i < 1000000; ++i)
 	{
