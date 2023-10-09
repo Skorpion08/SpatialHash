@@ -10,6 +10,7 @@
 #include "Window.h"
 #include "TextureManager.h"
 #include "ECS.h"
+#include "Log.h"
 //#include "EntityManager.h"
 
 

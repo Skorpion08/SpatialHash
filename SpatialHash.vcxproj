@@ -168,6 +168,7 @@
   <ItemGroup>
     <ClInclude Include="Source\Column.h" />
     <ClInclude Include="Source\ECS.h" />
+    <ClInclude Include="Source\NewColumn.h" />
     <ClInclude Include="Source\Query.h" />
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Shape.h" />

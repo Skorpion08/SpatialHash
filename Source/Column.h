@@ -4,12 +4,13 @@
 #include <typeinfo>
 #include <stdexcept>
 #include <iostream>
+#include <memory>
+
+extern struct Data;
 
 struct Column
 {
 	Column(const std::type_info& t, size_t size) : type(t), element_size(size), m_count(0) {}
-
-	//void (*constructor)();
 
 	std::vector<uint8_t> elements = {}; // We use a uint8_t as a buffer for memory
 	const std::type_info& type;
@@ -54,7 +55,6 @@ T* Column::PushBack(Args && ...args)
 	// The pros: we don't copy, we don't call the destructor, Cons: we have to call the dtor manually
 
 	return new (elementPtr) T(std::forward<Args>(args)...);
-	//*elementPtr = T(std::forward<Args>(args)...);
 }
 
 template<typename T, typename ...Args>

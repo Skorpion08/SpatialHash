@@ -22,6 +22,10 @@ EntityID ECS::NewEnitity()
 	return entityID;
 }
 
+void ECS::RemoveEntity()
+{
+}
+
 void ECS::Add(EntityID entityID, ID newID)
 {
 	// We can quit if the entity doesnt exist

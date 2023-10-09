@@ -21,6 +21,7 @@ struct Archetype
 
 	std::vector<EntityID> id_table;
 	// TO DO: Store columns in a pointer so archetypes with tag point to the same column
+	//std::vector<Column> columns;
 	std::vector<Column> columns;
 	size_t entityCount = 0;
 
@@ -61,6 +62,8 @@ namespace ECS
 	{
 		return nextEntityID++;
 	}
+
+	void RemoveEntity();
 
 	// It adds an id and doesnt call the constructor
 	void Add(EntityID entityID, ID newID);
