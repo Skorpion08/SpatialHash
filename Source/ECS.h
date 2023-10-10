@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <typeinfo>
+#include <typeindex>
 #include <iostream>
 
 #include "sorted_vector.h"
@@ -22,7 +23,7 @@ struct Archetype
 	std::vector<EntityID> id_table;
 	// TO DO: Store columns in a pointer so archetypes with tag point to the same column
 	//std::vector<Column> columns;
-	std::vector<Column> columns;
+	std::vector<ColumnBase*> columns;
 	size_t entityCount = 0;
 
 	// Number of data entities attached to it
@@ -63,9 +64,9 @@ namespace ECS
 		return nextEntityID++;
 	}
 
-	void RemoveEntity();
+	void RemoveEntity(EntityID entityID);
 
-	// It adds an id and doesnt call the constructor
+	// Only for adding plain id's without any type
 	void Add(EntityID entityID, ID newID);
 
 	template <typename T, typename... Args>
@@ -88,7 +89,7 @@ namespace ECS
 	std::vector<Archetype*> Query();
 
 	// Returns the id for a new component
-	ID InitComponent(const std::type_info& ti, uint32_t size);
+	ID InitComponent(const char* name, uint32_t size);
 };
 
 
@@ -96,7 +97,7 @@ namespace ECS
 
 struct Data
 {
-	const std::type_info& ti;
+	std::string name;
 	uint32_t size;
 };
 
@@ -107,8 +108,6 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 {
 	if (!entityRecord.contains(entityID))
 		return;
-
-	//ID componentID = getID(T);
 
 	EntityRecord& record = entityRecord[entityID];
 	Archetype* oldArchetype = record.archetype;
@@ -142,10 +141,10 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 
 			if (i == newCompIndex)
 			{
-				columns.emplace_back(Column(typeid(T), sizeof(T)));
+				columns.emplace_back(new Column<T>);
 				continue;
 			}
-			columns.emplace_back(Column(oldTable[j].type, oldTable[j].element_size));
+			columns.emplace_back(oldTable[j]->CloneType());
 			++j;
 		}
 	}
@@ -159,7 +158,7 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 		if (i == newCompIndex)
 		{
 			// we push in the new data and add the index
-			columns[i].PushBack<T>(std::move(args)...);
+			static_cast<Column<T>*>(columns[i])->PushBack(std::move(args)...);
 			
 			newArchetype->id_table.resize(newArchetype->entityCount + 1);
 			newArchetype->id_table[newArchetype->entityCount] = entityID;
@@ -167,11 +166,10 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 		}
 		if (!Has(newType[i], getID(Data))) continue;
 
-		Column* oldCol = &oldTable[j];
+		ColumnBase* oldCol = oldTable[j];
 
 		// Move data to the new archetype
-		columns[i].ResizeFor(1);
-		memcpy(columns[i].GetAddress(columns[i].m_count++), oldCol->GetAddress(oldRow), columns[i].element_size);
+		columns[i]->MoveFrom(oldCol, oldRow);
 
 		// Swap the data from the end to the index of moved entity (only if the entity isn't at the last index)
 		EntityID idToSwap = oldArchetype->id_table[oldArchetype->entityCount-1];
@@ -179,28 +177,23 @@ void ECS::Add(EntityID entityID, ID componentID,  Args&&... args)
 		{
 			entityRecord[idToSwap].row = oldRow;
 			oldArchetype->id_table[oldRow] = idToSwap;
-			memcpy(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(columns[j].element_size));
-		}
-		else
-		{
-			--oldCol->m_count;
 		}
 		++j;
 	}
 	--oldArchetype->entityCount;
 	++newArchetype->entityCount;
 }
-
-template<typename T>
-inline T* ECS::Get(EntityID entityID)
-{
-	EntityRecord& record = entityRecord[entityID];
-	int index = record.archetype->type.FindIndexFor(GetID<T>());
-	if (index == -1)
-		return nullptr;
-
-	return record.archetype->columns[index].Get<T>(record.row);
-}
+//
+//template<typename T>
+//inline T* ECS::Get(EntityID entityID)
+//{
+//	EntityRecord& record = entityRecord[entityID];
+//	int index = record.archetype->type.FindIndexFor(GetID<T>());
+//	if (index == -1)
+//		return nullptr;
+//
+//	return record.archetype->columns[index].Get(record.row);
+//}
 
 template<typename... Types>
 inline Archetype* ECS::QueryExact()
@@ -288,16 +281,14 @@ inline std::vector<Archetype*> ECS::Query()
 }
 
 // Creates an id for a type handle
-
-#define COMPONENT(type) ID getID(type) = ECS::InitComponent(typeid(type), sizeof(type));
+#define COMPONENT(type) ID getID(type) = ECS::InitComponent(typeid(type).name(), sizeof(type));
 
 #define TAG(name) ID name = ECS::NewEnitity();
 
-#define get(e, type) static_cast<type*>(ECS::Get(e, getID(type)))
+#define GetData(e, type) static_cast<type*>(ECS::Get(e, getID(type)))
 
 
 #define AddTag(e, name) ECS::Add(e, name)
-// Doesn't invoke the constructor
-#define AddType(e, id) ECS::Add(e, getID(id))
+
 // Invokes the constructor (uses templates)
 #define AddData(e, type, ...) ECS::Add<type>(e, getID(type), __VA_ARGS__)

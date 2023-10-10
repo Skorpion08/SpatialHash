@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <chrono>
 #include <random>
-#include "NewColumn.h"
 
 #include "Application.h"
 #include "Vector.h"
@@ -81,7 +80,7 @@ bool Application::LoadMedia()
 void Application::MainLoop()
 {
 	bool quit = false;
-	
+
 	SDL_Event e;
 
 	float v = 1000.0f;
@@ -107,7 +106,7 @@ void Application::MainLoop()
 	SDL_Rect dst2(100, 100, 100, 100);
 	ecs.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
 	OBB obb2(100, 100);
-	
+
 	ecs.AddRigidbody(square2, 100, true, 490, 0.8);
 	ecs.AddCollision(square2, &obb2);
 
@@ -214,16 +213,14 @@ void Application::MainLoop()
 		int a = 0;
 		int b = 0;
 		int c = 0;
-		~A() { std::cout << "destroyed\n"; }
 	};
-	struct B{
-		B() = default;
-		B(int _x) : x(_x) { std::cout << "created\n"; }
+	struct B {
+		//B(int _x) : x(_x) { std::cout << "created\n"; }
 		int x;
-		~B() { std::cout << "destroyed\n"; }
+		//~B() { std::cout << "destroyed\n"; }
 	};
-	struct C{ int x; };
-	struct D{ int x; };
+	struct C { int x; };
+	struct D { int x; };
 	struct E { int x; };
 	struct F { int x, y, z; }; struct G { int x, y, z, w; }; struct H { int x, y; };
 
@@ -231,30 +228,26 @@ void Application::MainLoop()
 	std::mt19937 mt(device());
 	std::uniform_int_distribution<int> dist(-100, 100);
 
-	std::vector<New::ColumnBase*> columns;
-	columns.emplace_back(new New::Column<int>());
-	New::Column<int>* Col = static_cast<New::Column<int>*>(columns[0]);
-	Col->PushBack(2);
-	Col->PushBack(3);
-	std::cout << *Col->Get(0) << '\n';
-	columns[0]->Destroy(0);
-	std::cout << *Col->Get(0) << '\n';
+	COMPONENT(A);
+	COMPONENT(B);
+	TAG(Enemy);
+	EntityID e0 = ECS::NewEnitity();
+	for (int i = 0; i < 1; ++i)
+	{
 
-
-	for (auto& col : columns)
-		delete col;
-	//COMPONENT(A);
-	//COMPONENT(B);
-	//TAG(Enemy);
-	//
-	//EntityID e1 = ECS::NewEnitity();
+	
+	EntityID e1 = ECS::NewEnitity();
 	//EntityID e2 = ECS::NewEnitity();
 
+	AddData(e1, Transform);
+	AddData(e1, Kinematics, Vector2(10, 10), Vector2(10,10));
+	}
 	////AddTag(e1, Enemy);
+	//ECS::Get<A>(e1);
 	//AddData(e1, A, 0, 0, 0);
 	//AddData(e2, A, 1, 2, 3);
 	//auto start = std::chrono::high_resolution_clock::now();
-	//for (int i = 0; i < 4; ++i)
+	//for (int i = 0; i < 1000000; ++i)
 	//{
 	//	EntityID e0 = ECS::NewEnitity();
 	//	//AddData(e, A, i*2, i * 3, i * 4);
@@ -262,10 +255,6 @@ void Application::MainLoop()
 	//	if (i % 4 == 0)
 	//	{
 	//		AddTag(e0, Enemy);
-	//	}
-	//	if (i % 16 == 0)
-	//	{
-	//		AddType(e0, B);
 	//	}
 	//}
 	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Setup took: " << duration.count() * 1000 << " ms\n";
@@ -276,8 +265,8 @@ void Application::MainLoop()
 	//int sum = 0;
 	//for (int i = 0; i < query.size(); ++i)
 	//{
-	//	A* aa = query[i]->columns[query[i]->type.FindIndexFor(getID(A))].Get<A>(0);
-	//	for (int j = 0; j < query[i]->columns[0].m_count; ++j)
+	//	A* aa = static_cast<Column<A>*>(query[i]->columns[query[i]->type.FindIndexFor(getID(A))])->Get(0);
+	//	for (int j = 0; j < query[i]->entityCount; ++j)
 	//	{
 	//		sum += aa[j].a;
 	//		sum -= aa[j].b;
@@ -287,7 +276,7 @@ void Application::MainLoop()
 
 	//end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Processing took: " << duration.count() * 1000 << " ms\n";
 	//std::cout << sum << '\n';
-
+	
 #if 0
 	for (int i = 0; i < 1000000; ++i)
 	{
@@ -366,7 +355,7 @@ void Application::MainLoop()
 	//std::cout << sum;
 	// Camera code
 	Vector2 camera;
-
+	std::ios::sync_with_stdio(false);
 	Uint32 lastUpdate = SDL_GetTicks();
 	Uint32 currentUpdate = 0;
 	
@@ -456,7 +445,8 @@ void Application::MainLoop()
 		currentUpdate = SDL_GetTicks();
 		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001;
-		//transformSystem.Update(deltaTime);
+		physics.UpdateTransform(deltaTime);
+		//std::cout << GetData(e1, Transform)->pos.x << ' ' << GetData(e1, Transform)->pos.y << '\n';
 		//collisionSystem.Update();
 		//collisionSystem.SolveCollisions();
 
@@ -478,6 +468,7 @@ void Application::MainLoop()
 		//spritesSystem.Render();
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderDrawPoint(renderer, GetData(e0+1, Transform)->pos.x, GetData(e0+1, Transform)->pos.y);
 		//SDL_RenderDrawLine(renderer, 0-camera.x, 350-camera.y, 1000-camera.x, 350-camera.y);
 		/*
 		for (int i = 0; i < obb1.vertices.size(); i++)
@@ -514,9 +505,11 @@ void Application::MainLoop()
 			SDL_RenderDrawLine(renderer, obb2.vertices[i].x, obb2.vertices[i].y, obb2.vertices[i + 1].x, obb2.vertices[i + 1].y);
 		}
 		*/
+		std::cout << (currentUpdate - lastUpdate) << " ms\n";
 		lastUpdate = currentUpdate;
 		//Update screen
 		SDL_RenderPresent(renderer);
+
 
 		//printf("fps: %f\n", 1/deltaTime);
 		//printf("deltatime: %f\n", deltaTime);

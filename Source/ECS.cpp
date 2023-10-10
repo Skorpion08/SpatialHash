@@ -22,8 +22,21 @@ EntityID ECS::NewEnitity()
 	return entityID;
 }
 
-void ECS::RemoveEntity()
+void ECS::RemoveEntity(EntityID entityID)
 {
+	if (!entityRecord.contains(entityID))
+		return;
+
+	EntityRecord& record = entityRecord[entityID];
+	size_t row = record.row;
+	for (int i = 0; i < record.archetype->dataCount; ++i)
+	{
+		record.archetype->columns[i]->Destroy(row);
+	}
+	// Swap the id
+	record.archetype->id_table[row] = record.archetype->id_table[record.archetype->entityCount--];
+
+	entityRecord.erase(entityID);
 }
 
 void ECS::Add(EntityID entityID, ID newID)
@@ -64,14 +77,15 @@ void ECS::Add(EntityID entityID, ID newID)
 
 			if (!Has(newType[i], getID(Data))) continue;
 
-			if (newIDIndex == i)
-			{
-				Data* data = get(newID, Data);
-				columns.emplace_back(data->ti, data->size);
-				continue;
-			}
+			// We can ommit this as we don't create any columns
+			//if (newIDIndex == i)
+			//{
+			//	Data* data = get(newID, Data);
+			//	columns.emplace_back(data->ti, data->size);
+			//	continue;
+			//}
 
-			columns.emplace_back(oldTable[j].type, oldTable[j].element_size);
+			columns.emplace_back(oldTable[j]->CloneType());
 			++j;
 		}
 	}
@@ -84,24 +98,16 @@ void ECS::Add(EntityID entityID, ID newID)
 		// Shit breaks when a tag is the one we're adding
 		if (i == newIDIndex)
 		{
-			// Make space for our component without any set values
-			if (Has(newType[i], getID(Data)))
-			{
-				columns[i].ResizeFor(1);
-				++columns[i].m_count;
-			}
-
 			newArchetype->id_table.resize(newArchetype->entityCount + 1);
 			newArchetype->id_table[newArchetype->entityCount] = entityID;
 			continue;
 		}
 		if (!Has(newType[i], getID(Data))) continue;
 
-		Column* oldCol = &oldTable[j];
+		ColumnBase* oldCol = oldTable[j];
 
 		// Move data to the new archetype
-		columns[i].ResizeFor(1);
-		memcpy(columns[i].GetAddress(columns[i].m_count++), oldCol->GetAddress(oldRow), columns[i].element_size);
+		columns[i]->MoveFrom(oldCol, oldRow);
 
 		// Swap the data from the end to the index of moved entity (only if the entity isn't at the last index)
 		EntityID idToSwap = oldArchetype->id_table[oldArchetype->entityCount - 1];
@@ -109,11 +115,6 @@ void ECS::Add(EntityID entityID, ID newID)
 		{
 			entityRecord[idToSwap].row = oldRow;
 			oldArchetype->id_table[oldRow] = idToSwap;
-			memmove(oldCol->GetAddress(oldRow), oldCol->GetAddress(--oldCol->m_count), sizeof(columns[j].element_size));
-		}
-		else
-		{
-			--oldCol->m_count;
 		}
 		++j;
 	}
@@ -127,8 +128,7 @@ void* ECS::Get(EntityID entityID, ID id)
 	int index = record.archetype->type.FindIndexFor(id);
 	if (index == -1)
 		return nullptr;
-
-	return record.archetype->columns[index].GetAddress(record.row);
+	return record.archetype->columns[index]->GetAddress(record.row);
 }
 
 bool ECS::Has(EntityID entity, ID id)
@@ -142,6 +142,8 @@ bool ECS::Has(EntityID entity, ID id)
 std::vector<Archetype*> ECS::Query(Type&& queriedType)
 {
 	int n = queriedType.Size();
+
+	if (n == 0) return { &typeToArchetype[{}] };
 
 	// We need to find the vector of archetypes with the least amount
 	int min = std::numeric_limits<int>::max();
@@ -209,7 +211,7 @@ std::vector<Archetype*> ECS::Query(Type&& queriedType)
 	return result;
 }
 
-ID ECS::InitComponent(const std::type_info& ti, uint32_t size)
+ID ECS::InitComponent(const char* name, uint32_t size)
 {
 	ID component = ECS::NewID();
 	// Store Component as an entity
@@ -220,8 +222,8 @@ ID ECS::InitComponent(const std::type_info& ti, uint32_t size)
 	arch->type = { getID(Data) };
 
 	// We can remove resize if we make this arch in a world setup
-	arch->columns.emplace_back(typeid(Data), size);
-	Data* data = arch->columns[0].PushBack<Data>(ti, size);
+	arch->columns.emplace_back(new Column<Data>);
+	static_cast<Column<Data>*>(arch->columns[0])->PushBack(name, size);
 
 	// Setup the info for record
 	arch->id_table.resize(record.archetype->entityCount + 1);

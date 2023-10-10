@@ -9,7 +9,7 @@
 
 #include "Window.h"
 #include "TextureManager.h"
-#include "ECS.h"
+#include "Physics.h"
 #include "Log.h"
 //#include "EntityManager.h"
 
@@ -40,6 +40,8 @@ private:
 	// ecs stuff
 	//ECS& ecs = ECS::GetInstance();
 	TextureManager& textureManager = TextureManager::GetInstance();
+
+	Physics physics;
 
 	//SpriteSystem spritesSystem;
 	//TransformSystem transformSystem;

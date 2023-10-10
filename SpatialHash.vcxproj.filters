@@ -42,10 +42,13 @@
     <ClCompile Include="Source\sorted_vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Column.cpp">
+    <ClCompile Include="Source\ECS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ECS.cpp">
+    <ClCompile Include="Source\Physics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -83,7 +86,10 @@
     <ClInclude Include="Source\ECS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NewColumn.h">
+    <ClInclude Include="Source\Physics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
