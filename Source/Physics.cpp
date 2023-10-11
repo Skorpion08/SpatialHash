@@ -183,140 +183,39 @@ void Physics::FindSolveCollisions()
 
 	for (int k = 0; k < query.size(); ++k)
 	{
-		Archetype* arch = query[k];
-		Collision* collisionComps = static_cast<Column<Collision>*>(arch->columns[arch->type.FindIndexFor(getID(Collision))])->Get(0);
-		for(int i = 0; i < arch->entityCount; ++i)
+		Archetype* arch1 = query[k];
+		Collision* collisionComps1 = static_cast<Column<Collision>*>(arch1->columns[arch1->type.FindIndexFor(getID(Collision))])->Get(0);
+
+		for (int i = 0; i < arch1->entityCount; ++i)
 		{
-			collisionComps
-		}
-	}
-
-	// Less but still naive approach
-	for (auto& [entity1ID, collisionComponent1] : registry.collisionComponents)
-	{
-		for (auto& [entity2ID, collisionComponent2] : registry.collisionComponents)
-		{
-			// We can skip if it's the same entity
-			if (entity1ID == entity2ID || (entities.at(entity1ID).movability == Static && entities.at(entity2ID).movability == Static))
-				continue;
-
-			CollisionMethod method1 = collisionComponent1.collider->GetCollisionMethod();
-			CollisionMethod method2 = collisionComponent2.collider->GetCollisionMethod();
-
-			CollisionInfo info;
-
-			if (method1 == CollisionMethod::AABB && method2 == CollisionMethod::AABB)
+			Collision& collisionComp1 = collisionComps1[i];
+			for (int l = 0; l < query.size(); ++l)
 			{
-				info = AABBtoAABB(static_cast<AABB&>(*collisionComponent1.collider), static_cast<AABB&>(*collisionComponent2.collider));
-			}
-			else
-			{
-				info = POLYtoPOLY(*collisionComponent1.collider, *collisionComponent2.collider);
-			}
-
-			if (collisionComponent1.blockCollision && collisionComponent2.blockCollision && info.overlap) // We can solve the collision
-			{
-				Vector2 displacement1;
-				Vector2 displacement2;
-
-				registry.transforms[entity1ID].pos += info.mtv / 2;
-				displacement1 += info.mtv / 2;
-				collisionComponent1.collider->AddPosition(info.mtv / 2);
-
-				registry.transforms[entity2ID].pos -= info.mtv / 2;
-				displacement2 -= info.mtv / 2;
-				collisionComponent2.collider->AddPosition(-info.mtv / 2);
-
-				if (manager.GetEntities()[entity1ID].movability == Static)
+				Archetype* arch2 = query[l];
+				Collision* collisionComps2 = static_cast<Column<Collision>*>(arch2->columns[arch2->type.FindIndexFor(getID(Collision))])->Get(0);
+				for (int j = 0; j < arch2->entityCount; ++j)
 				{
-					registry.transforms[entity1ID].pos -= info.mtv / 2;
-					displacement1 -= info.mtv / 2;
-					collisionComponent1.collider->AddPosition(-info.mtv);
-
-					registry.transforms[entity2ID].pos -= info.mtv / 2;
-					displacement2 -= info.mtv / 2;
-					collisionComponent2.collider->AddPosition(-info.mtv);
-				}
-				if (manager.GetEntities()[entity2ID].movability == Static)
-				{
-					registry.transforms[entity2ID].pos += info.mtv / 2;
-					displacement2 += info.mtv / 2;
-					collisionComponent2.collider->AddPosition(info.mtv / 2);
-
-					registry.transforms[entity1ID].pos += info.mtv / 2;
-					displacement1 += info.mtv / 2;
-					collisionComponent1.collider->AddPosition(info.mtv);
-				}
-
-				if (registry.rigidbodies.contains(entity1ID) && registry.rigidbodies.contains(entity2ID))
-				{
-					// If there's an overlap but no mtv it means shapes barely stick to each other
-					if (info.mtv.x == 0 && info.mtv.y == 0)
+					if (arch1->id_table[i] == arch1->id_table[j])
 						continue;
 
-					Rigidbody& rb1 = registry.rigidbodies[entity1ID];
-					Rigidbody& rb2 = registry.rigidbodies[entity2ID];
+					Collision& collisionComp2 = collisionComps1[j];
 
-					// We need to calculate the velocity at the time of collision and not at the time of overlaps
+					CollisionMethod method1 = collisionComp1.collider->GetCollisionMethod();
+					CollisionMethod method2 = collisionComp2.collider->GetCollisionMethod();
 
-					Vector2 relativeVelVector = registry.kinematics[entity2ID].vel - registry.kinematics[entity1ID].vel;
-					Vector2 normal = Vector::GetNormalized(info.mtv);
-					//Vector2 normal = Vector::GetNormalized(info.mtv);
+					CollisionInfo info;
 
-					float relativeVel = Vector::DotProduct(relativeVelVector, normal);
-
-					if (relativeVel > 0)
+					if (method1 == CollisionMethod::AABB && method2 == CollisionMethod::AABB)
 					{
-						//printf("relative vel: %f\n", relativeVel);
-						float invMass1, invMass2;
-						if (manager.GetEntities()[entity1ID].movability == Dynamic)
-							invMass1 = 1.0 / rb1.mass;
-						else
-							invMass1 = 0;
-
-						if (manager.GetEntities()[entity2ID].movability == Dynamic)
-							invMass2 = 1.0 / rb2.mass;
-						else
-							invMass2 = 0;
-
-						// Calculate impulse
-						float impulseScalar = -(1 + (rb1.elasticity + rb2.elasticity) / 2) *
-							relativeVel /
-							(invMass1 + invMass2);
-						Vector2 impulse = normal * impulseScalar;
-
-						// Apply impulse to kinematics
-						registry.kinematics[entity1ID].vel -= impulse * invMass1;
-						registry.kinematics[entity2ID].vel += impulse * invMass2;
-
-						relativeVelVector = registry.kinematics[entity2ID].vel - registry.kinematics[entity1ID].vel;
-
-						relativeVel = Vector::DotProduct(relativeVelVector, normal);
-
-						// Apply friction
-						float sf = (rb1.staticFriction + rb2.staticFriction) / 2;
-						float df = (rb1.dynamicFriction + rb2.dynamicFriction) / 2;
-
-						Vector2 tangent = Vector::GetNormalized(relativeVelVector - (normal * relativeVel));
-						float frictionScalar = -Vector::DotProduct(relativeVelVector, tangent) / (invMass1 + invMass2);
-
-						Vector2 frictionImpulse = frictionScalar * tangent;
-
-
-
-						if (abs(frictionScalar) < abs(impulseScalar) * sf)
-						{
-							frictionImpulse = frictionScalar * tangent;
-						}
-						else
-						{
-							frictionImpulse = impulseScalar * tangent * df;
-						}
-
-						// Apply friction impulse to kinematics
-						registry.kinematics[entity1ID].vel -= frictionImpulse * invMass1;
-						registry.kinematics[entity2ID].vel += frictionImpulse * invMass2;
+						info = AABBtoAABB(static_cast<AABB&>(*collisionComp1.collider), static_cast<AABB&>(*collisionComp2.collider));
 					}
+					else
+					{
+						info = POLYtoPOLY(*collisionComp1.collider, *collisionComp2.collider);
+					}
+
+					//std::cout << "Colliding = " << (info.overlap ? "true\n" : "false\n");
+
 				}
 			}
 		}

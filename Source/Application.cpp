@@ -122,8 +122,13 @@ void Application::MainLoop()
 
 	AddData(e1, Transform);
 	AddData(e1, Kinematics);
-	//AddData(e1, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
+	AddData(e1, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
 	AddData(e1, Collision, new AABB(100, 100));
+
+	AddData(e0, Transform);
+	AddData(e0, Kinematics);
+	AddData(e0, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
+	AddData(e0, Collision, new AABB(100, 100));
 	////AddTag(e1, Enemy);
 	//ECS::Get<A>(e1);
 	//AddData(e1, A, 0, 0, 0);
@@ -312,6 +317,7 @@ void Application::MainLoop()
 
 		physics.UpdateTransform(deltaTime);
 		physics.UpdateColliders();
+		physics.FindSolveCollisions();
 		//collisionSystem.Update();
 		//collisionSystem.SolveCollisions();
 
@@ -324,7 +330,7 @@ void Application::MainLoop()
 		RenderSystem::Render(camera);
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		auto& shape = *GetData(e1, Collision)->collider;
+		/*auto& shape = *GetData(e1, Collision)->collider;
 		for (int i = 0; i < shape.vertices.size(); i++)
 		{
 			if (i + 1 == shape.vertices.size())
@@ -333,7 +339,7 @@ void Application::MainLoop()
 				break;
 			}
 			SDL_RenderDrawLine(renderer, shape.vertices[i].x - camera.x, shape.vertices[i].y - camera.y, shape.vertices[i + 1].x - camera.x, shape.vertices[i + 1].y - camera.y);
-		}
+		}*/
 
 
 		//std::cout << (currentUpdate - lastUpdate) << " ms\n";
