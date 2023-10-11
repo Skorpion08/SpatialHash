@@ -31,7 +31,7 @@ void Shape2D::UpdateSideVectors()
 	sides[vertexCount - 1] = Vector2(vertices[vertexCount - 1], vertices[0]);
 }
 
-void Polygon::AddPosition(const Vector2& addPosition)
+void Polygon::MoveBy(const Vector2& addPosition)
 {
 	if (addPosition.x == 0.0f && addPosition.y == 0.0f)
 		return;

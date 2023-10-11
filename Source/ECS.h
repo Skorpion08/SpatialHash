@@ -85,9 +85,6 @@ namespace ECS
 
 	std::vector<Archetype*> Query(Type&& queriedType);
 
-	template <typename... Types>
-	std::vector<Archetype*> Query();
-
 	// Returns the id for a new component
 	ID InitComponent(const char* name, uint32_t size);
 };
@@ -205,79 +202,6 @@ inline Archetype* ECS::QueryExact()
 		return &typeToArchetype[queriedType];
 	}
 	return nullptr;
-}
-
-
-template<typename ...Types>
-inline std::vector<Archetype*> ECS::Query()
-{
-	Type queriedType = { GetID<Types>()... };
-	int n = queriedType.Size();
-
-	// We need to find the vector of archetypes with the least amount
-	int min = std::numeric_limits<int>::max();
-
-	// Searched id with the lowest size
-	int id = -1;
-	for (int i = 0; i < n; ++i)
-	{
-		if (!componentIndex.contains(queriedType[i]))
-			return {};
-
-		if (componentIndex[queriedType[i]].size() < min)
-			min = componentIndex[queriedType[i]].size(); id = queriedType[i];
-	}
-
-	std::vector<Archetype*>& archetypes = componentIndex[id];
-	std::vector<Archetype*> result;
-
-	// Pointer in the queried type
-	int k = 1;
-
-	for (int i = 0; i < archetypes.size(); ++i)
-	{
-		Type& currentType = archetypes[i]->type;
-		Archetype* arch = archetypes[i];
-		int l = arch->type.FindIndexFor(queriedType[0]);
-		int r = arch->type.FindIndexFor(queriedType[n - 1]);
-
-		if (l == -1 || r == -1)
-			continue;
-
-		// We can skip under these conditions as we do not need to waste time on slower checks
-		if ((l == r && n == 1) || n == 2)
-		{
-			result.emplace_back(arch);
-			continue;
-		}
-
-		// It's the size of the interval we need to check
-		int s = r - l + 1;
-
-		int misses = s-n, hits = 2;
-
-		if (misses < 0)
-			continue;
-		
-		k = 1; // reset the pointer
-
-		for (int j = l+1; j < r; ++j)
-		{
-			// We can break if we used our misses
-			if (misses < 0) break;
-
-			if (currentType[j] == queriedType[k])
-			{
-				++hits;
-				++k;
-				// Add it to result if it passed
-				if (hits == n) result.emplace_back(arch);
-			}
-			else
-				--misses;
-		}
-	}
-	return result;
 }
 
 // Creates an id for a type handle

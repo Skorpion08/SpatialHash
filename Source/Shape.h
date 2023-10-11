@@ -30,7 +30,7 @@ struct Shape2D
 {
 	Shape2D() = default;
 
-	virtual void AddPosition(const Vector2& addPosition) = 0;
+	virtual void MoveBy(const Vector2& addPosition) = 0;
 
 	virtual void AddRotation(float addRotation) = 0;
 
@@ -60,7 +60,7 @@ struct Shape2D
 
 struct Polygon : Shape2D // rewrite this to use operator overloading
 {
-	void AddPosition(const Vector2& addPosition) override;
+	void MoveBy(const Vector2& addPosition) override;
 
 	virtual void AddRotation(float addRotation) override;
 

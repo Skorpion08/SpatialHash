@@ -7,7 +7,6 @@
 #include "Shape.h"
 
 
-
 Application::Application()
 {
 	window.w = 1000;
@@ -83,7 +82,7 @@ void Application::MainLoop()
 
 	SDL_Event e;
 
-	float v = 1000.0f;
+	float v = 200.0f;
 
 	float ad = 1000.0f;
 
@@ -93,121 +92,7 @@ void Application::MainLoop()
 
 	bool keyPressed = false;
 
-#if 0
-	EntityID fence = ecs.CreateEnitity();
-	ecs.AddTransform(fence);
-	SDL_Rect rectum = { 0,0, 4176 * 2, 960 * 2 };
-	ecs.AddSprite(fence, nullptr, &rectum, textureManager.Load("resources/fence.png"));
-
-
-	EntityID square2 = ecs.CreateEnitity();
-	ecs.AddTransform(square2, { 700,400 });
-	ecs.AddKinematics(square2);
-	SDL_Rect dst2(100, 100, 100, 100);
-	ecs.AddSprite(square2, nullptr, &dst2, textureManager.Load("resources/square.png"));
-	OBB obb2(100, 100);
-
-	ecs.AddRigidbody(square2, 100, true, 490, 0.8);
-	ecs.AddCollision(square2, &obb2);
-
-	EntityID square3 = ecs.CreateEnitity();
-	ecs.AddTransform(square3, { 300,400 });
-	ecs.AddKinematics(square3);
-	SDL_Rect dst3(100, 100, 100, 100);
-	ecs.AddSprite(square3, nullptr, &dst3, textureManager.Load("resources/square.png"));
-	AABB aabb1(100, 100);
-
-	ecs.AddRigidbody(square3, 60, true, 490, 0.8);
-
-	ecs.AddCollision(square3, &aabb1);
-
-	EntityID square = ecs.CreateEnitity();
-	ecs.AddTransform(square, { 500,400 });
-	ecs.AddKinematics(square);
-	SDL_Rect dst(100, 100, 100, 100);
-	ecs.AddSprite(square, nullptr, &dst, textureManager.Load("resources/square.png"));
-	AABB aabb(100, 100);
-
-	ecs.AddRigidbody(square, 60, true, 490, 0.8);
-
-	ecs.AddCollision(square, &aabb);
-	/*
-	EntityID swastyka = ecs.CreateEnitity();
-	ecs.AddTransform(swastyka);
-	ecs.AddKinematics(swastyka, { 0,0 }, { 0,0 }, 0, 1);
-	SDL_Rect dsts(0, 0, 400, 400);
-	ecs.AddSprite(swastyka, nullptr, &dsts, textureManager.Load("resources/swastyka.png"));
-
-	OBB swastik(400, 400);
-	ecs.AddCollision(swastyka, &swastik);
-	*/
-	EntityID rectangle = ecs.CreateEnitity(Static);
-	ecs.AddTransform(rectangle, { 400,700 });
-	ecs.AddKinematics(rectangle);
-	SDL_Rect dstrect(0, 0, 100000, 100);
-	ecs.AddSprite(rectangle, nullptr, &dstrect, textureManager.Load("resources/square.png"));
-	AABB aabb2(100000, 100);
-
-	ecs.AddRigidbody(rectangle, 0, false, 0, 1);
-	ecs.AddCollision(rectangle, &aabb2);
-
-	EntityID rectangle2 = ecs.CreateEnitity(Static);
-	ecs.AddTransform(rectangle2, { 400,0 });
-	ecs.AddKinematics(rectangle2);
-	SDL_Rect dstrect2(0, 0, 100000, 100);
-	ecs.AddSprite(rectangle2, nullptr, &dstrect2, textureManager.Load("resources/square.png"));
-	AABB aabb22(100000, 100);
-
-	ecs.AddRigidbody(rectangle2, 0, false, 0, 1);
-	ecs.AddCollision(rectangle2, &aabb22);
-
-	/*
-	EntityID rectangle2 = ecs.CreateEnitity(Dynamic);
-	ecs.AddTransform(rectangle2, { 400, 0});
-	ecs.AddKinematics(rectangle2, {0,100});
-	SDL_Rect dstrect2(0, 0, 10000, 100);
-	ecs.AddSprite(rectangle2, nullptr, &dstrect2, textureManager.Load("resources/square.png"));
-	AABB aabb3(100000, 100);
-
-	ecs.AddRigidbody(rectangle2, 1e6, false);
-	ecs.AddCollision(rectangle2, &aabb3);
-	*/
-	/*
-	EntityID square4 = ecs.CreateEnitity();
-	ecs.AddTransform(square4, { 400,400 });
-	SDL_Rect dst4(100, 100, 100, 100);
-	ecs.AddSprite(square4, nullptr, &dst4, textureManager.Load("resources/triangle.png"));
-	AABB aabb2(100, 100, { 400,400 });
-
-	ecs.GetRegistry().collisionComponents[square4].collider = &aabb2;
-
-	EntityID square5 = ecs.CreateEnitity();
-	ecs.AddTransform(square5, { 400,400 });
-	SDL_Rect dst5(100, 100, 100, 100);
-	ecs.AddSprite(square5, nullptr, &dst5, textureManager.Load("resources/triangle.png"));
-	AABB aabb3(100, 100, { 400,400 });
-
-	ecs.GetRegistry().collisionComponents[square5].collider = &aabb3;
-	*/
-
-	EntityID border = ecs.CreateEnitity(Static);
-	ecs.AddTransform(border, { 1000, 700 });
-	SDL_Rect bordeah = { 0,0,100,10000 };
-	ecs.AddSprite(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
-	//ecs.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
-	AABB borderaa(100, 10000);
-	ecs.AddCollision(border, &borderaa);
-	ecs.AddRigidbody(border, 0, false, 0, 1);
-
-	EntityID border2 = ecs.CreateEnitity(Static);
-	ecs.AddTransform(border2, { 0, 700 });
-	SDL_Rect bordeah2 = { 0,0,100,10000 };
-	ecs.AddSprite(border2, nullptr, &bordeah2, textureManager.Load("resources/square.png"));
-	//ecs.Add<Sprite>(border, nullptr, &bordeah, textureManager.Load("resources/square.png"));
-	AABB borderaa2(100, 10000);
-	ecs.AddCollision(border2, &borderaa2);
-	ecs.AddRigidbody(border2, 0, false, 0, 1);
-#endif
+	int frame = 0;
 
 	struct A {
 		int a = 0;
@@ -232,16 +117,13 @@ void Application::MainLoop()
 	COMPONENT(B);
 	TAG(Enemy);
 	EntityID e0 = ECS::NewEnitity();
-	for (int i = 0; i < 1; ++i)
-	{
-
-	
 	EntityID e1 = ECS::NewEnitity();
 	//EntityID e2 = ECS::NewEnitity();
 
 	AddData(e1, Transform);
-	AddData(e1, Kinematics, Vector2(10, 10), Vector2(10,10));
-	}
+	AddData(e1, Kinematics);
+	//AddData(e1, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
+	AddData(e1, Collision, new AABB(100, 100));
 	////AddTag(e1, Enemy);
 	//ECS::Get<A>(e1);
 	//AddData(e1, A, 0, 0, 0);
@@ -369,70 +251,52 @@ void Application::MainLoop()
 				quit = true;
 				break;
 			}
-			//else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
-			//{
-			//	if (e.key.keysym.sym == SDLK_LEFT)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].acc.x += -v;
-			//		keyPressed = true;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_RIGHT)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].acc.x += v;
-			//		keyPressed = true;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_UP)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].acc.y += -v;
-			//		SDL_RenderSetScale(renderer, 1, 1);
-			//		keyPressed = true;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_DOWN)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].acc.y += v;
-			//		//SDL_RenderSetScale(renderer, scaleX, scaleY);
-			//		keyPressed = true;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_o)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].angularVel = -b;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_p)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].angularVel = b;
-			//	}
-			//}
-			//else if (e.type == SDL_KEYUP && e.key.repeat == 0)
-			//{
-			//	if (e.key.keysym.sym == SDLK_LEFT)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].acc.x -= -v;
-			//		keyPressed = false;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_RIGHT)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].acc.x -= v;
-			//		keyPressed = false;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_UP)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].acc.y -= -v;
-			//		keyPressed = false;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_DOWN)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].acc.y -= v;
-			//		keyPressed = false;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_o)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].angularVel = 0;
-			//	}
-			//	else if (e.key.keysym.sym == SDLK_p)
-			//	{
-			//		ecs.GetRegistry().kinematics[square2].angularVel = 0;
-			//	}
-			//}
+			else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+			{
+				if (e.key.keysym.sym == SDLK_LEFT)
+				{
+					GetData(e1, Kinematics)->vel.x -= v;
+					keyPressed = true;
+				}
+				else if (e.key.keysym.sym == SDLK_RIGHT)
+				{
+					GetData(e1, Kinematics)->vel.x += v;
+					keyPressed = true;
+				}
+				else if (e.key.keysym.sym == SDLK_UP)
+				{
+					GetData(e1, Kinematics)->vel.y -= v;
+					keyPressed = true;
+				}
+				else if (e.key.keysym.sym == SDLK_DOWN)
+				{
+					GetData(e1, Kinematics)->vel.y += v;
+					keyPressed = true;
+				}
+			}
+			else if (e.type == SDL_KEYUP && e.key.repeat == 0)
+			{
+				if (e.key.keysym.sym == SDLK_LEFT)
+				{
+					GetData(e1, Kinematics)->vel.x -= -v;
+					keyPressed = false;
+				}
+				else if (e.key.keysym.sym == SDLK_RIGHT)
+				{
+					GetData(e1, Kinematics)->vel.x += -v;
+					keyPressed = false;
+				}
+				else if (e.key.keysym.sym == SDLK_UP)
+				{
+					GetData(e1, Kinematics)->vel.y -= -v;
+					keyPressed = false;
+				}
+				else if (e.key.keysym.sym == SDLK_DOWN)
+				{
+					GetData(e1, Kinematics)->vel.y += -v;
+					keyPressed = false;
+				}
+			}
 			
 		}
 
@@ -445,35 +309,24 @@ void Application::MainLoop()
 		currentUpdate = SDL_GetTicks();
 		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001;
+
 		physics.UpdateTransform(deltaTime);
-		//std::cout << GetData(e1, Transform)->pos.x << ' ' << GetData(e1, Transform)->pos.y << '\n';
+		physics.UpdateColliders();
 		//collisionSystem.Update();
 		//collisionSystem.SolveCollisions();
 
 		// Camera updating
 		// camera.x = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
 		// camera.y = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
-		//camera.x = ecs.GetRegistry().transforms[square2].pos.x - window.w / 2;
-		//camera.y = ecs.GetRegistry().transforms[square2].pos.y - window.h / 2;
 		camera.x = 0;
 		camera.y = 0;
 
-		//ecs.GetRegistry().transforms[rectangle].pos = { 400, 700 };
-		//ecs.GetRegistry().kinematics[rectangle].vel = { 0,0 };
-		//printf("vel: %f\n", ecs.GetRegistry().kinematics[square2].vel.x);
-		//printf("camera: %f %f\n", camera.x, camera.y);
-		//printf("acc %f %f\n", ecs.GetRegistry().kinematics[square2].acc.x, ecs.GetRegistry().kinematics[square2].acc.y);
-
-		//spritesSystem.Update(camera);
-		//spritesSystem.Render();
+		RenderSystem::Render(camera);
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderDrawPoint(renderer, GetData(e0+1, Transform)->pos.x, GetData(e0+1, Transform)->pos.y);
-		//SDL_RenderDrawLine(renderer, 0-camera.x, 350-camera.y, 1000-camera.x, 350-camera.y);
-		/*
-		for (int i = 0; i < obb1.vertices.size(); i++)
+		auto& shape = *GetData(e1, Collision)->collider;
+		for (int i = 0; i < shape.vertices.size(); i++)
 		{
-			auto& shape = obb1;
 			if (i + 1 == shape.vertices.size())
 			{
 				SDL_RenderDrawLine(renderer, shape.vertices[i].x - camera.x, shape.vertices[i].y - camera.y, shape.vertices[0].x - camera.x, shape.vertices[0].y - camera.y);
@@ -481,31 +334,17 @@ void Application::MainLoop()
 			}
 			SDL_RenderDrawLine(renderer, shape.vertices[i].x - camera.x, shape.vertices[i].y - camera.y, shape.vertices[i + 1].x - camera.x, shape.vertices[i + 1].y - camera.y);
 		}
-		*/
-		/*
-		for (int i = 0; i < obb2.vertices.size(); i++)
+
+
+		//std::cout << (currentUpdate - lastUpdate) << " ms\n";
+		++frame;
+		if (SDL_GetTicks() % 1000 == 0 && frame > 5)
 		{
-			auto& shape = obb2;
-			if (i + 1 == shape.vertices.size())
-			{
-				SDL_RenderDrawLine(renderer, shape.vertices[i].x - camera.x, shape.vertices[i].y - camera.y, shape.vertices[0].x - camera.x, shape.vertices[0].y - camera.y);
-				break;
-			}
-			SDL_RenderDrawLine(renderer, shape.vertices[i].x - camera.x, shape.vertices[i].y - camera.y, shape.vertices[i + 1].x - camera.x, shape.vertices[i + 1].y - camera.y);
+			std::cout << frame << " fps\n";
+			frame = 0;
 		}
-		*/
-		/*
-		for (int i = 0; i < obb2.vertices.size(); i++)
-		{
-			if (i + 1 == obb2.vertices.size())
-			{
-				SDL_RenderDrawLine(renderer, obb2.vertices[i].x, obb2.vertices[i].y, obb2.vertices[0].x, obb2.vertices[0].y);
-				break;
-			}
-			SDL_RenderDrawLine(renderer, obb2.vertices[i].x, obb2.vertices[i].y, obb2.vertices[i + 1].x, obb2.vertices[i + 1].y);
-		}
-		*/
-		std::cout << (currentUpdate - lastUpdate) << " ms\n";
+
+
 		lastUpdate = currentUpdate;
 		//Update screen
 		SDL_RenderPresent(renderer);
@@ -514,7 +353,7 @@ void Application::MainLoop()
 		//printf("fps: %f\n", 1/deltaTime);
 		//printf("deltatime: %f\n", deltaTime);
 
-	//	if (1000 / 60 > deltaTime) SDL_Delay(1000 / 100 - deltaTime); 
+		//if (1000 / 60 > deltaTime) SDL_Delay(1000 / 100 - deltaTime); 
 	}
 }
 
