@@ -113,7 +113,7 @@ void Application::MainLoop()
 	std::mt19937 mt(device());
 	std::uniform_int_distribution<int> dist(-100, 100);
 
-	EntityID ceiling = ECS::NewEnitity();
+	/*EntityID ceiling = ECS::NewEnitity();
 	AddData(ceiling, Transform, Vector2(0, 0));
 	AddData(ceiling, Kinematics);
 	AddData(ceiling, Sprite, 1000, 100, nullptr, textureManager.Load("resources/square.png"));
@@ -139,7 +139,7 @@ void Application::MainLoop()
 	AddData(rwall, Kinematics);
 	AddData(rwall, Sprite, 100, 10000, nullptr, textureManager.Load("resources/square.png"));
 	AddData(rwall, Collision, new OBB(100, 10000));
-	AddData(rwall, Rigidbody, 10000000);
+	AddData(rwall, Rigidbody, 10000000);*/
 
 	EntityID e1 = ECS::NewEnitity();
 	//EntityID e2 = ECS::NewEnitity();
@@ -149,55 +149,14 @@ void Application::MainLoop()
 	AddData(e1, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
 	AddData(e1, Collision, new OBB(100, 100));
 	AddData(e1, Rigidbody, 10);
-	for (int i = 0; i < 1; ++i)
-	{
-
 		EntityID e0 = ECS::NewEnitity();
 
 
-		AddData(e0, Transform, Vector2(200*i+50, 100*i+50));
-		AddData(e0, Kinematics, Vector2(), Vector2(-10*i, -2*i));
+		AddData(e0, Transform, Vector2(50, 50));
+		AddData(e0, Kinematics, Vector2(), Vector2(0,0));
 		AddData(e0, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
 		AddData(e0, Collision, new OBB(100, 100));
-		AddData(e0, Rigidbody, 100);
-	}
-
-
-	////AddTag(e1, Enemy);
-	//ECS::Get<A>(e1);
-	//AddData(e1, A, 0, 0, 0);
-	//AddData(e2, A, 1, 2, 3);
-	//auto start = std::chrono::high_resolution_clock::now();
-	//for (int i = 0; i < 1000000; ++i)
-	//{
-	//	EntityID e0 = ECS::NewEnitity();
-	//	//AddData(e, A, i*2, i * 3, i * 4);
-	//	AddData(e0, A, dist(mt), dist(mt), dist(mt));
-	//	if (i % 4 == 0)
-	//	{
-	//		AddTag(e0, Enemy);
-	//	}
-	//}
-	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Setup took: " << duration.count() * 1000 << " ms\n";
-	//start = std::chrono::high_resolution_clock::now();
-	//auto query = ECS::Query({ A_ID });
-	//end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Querying took: " << duration.count() * 1000 << " ms\n";
-	//start = std::chrono::high_resolution_clock::now();
-	//int sum = 0;
-	//for (int i = 0; i < query.size(); ++i)
-	//{
-	//	A* aa = static_cast<Column<A>*>(query[i]->columns[query[i]->type.FindIndexFor(getID(A))])->Get(0);
-	//	for (int j = 0; j < query[i]->entityCount; ++j)
-	//	{
-	//		sum += aa[j].a;
-	//		sum -= aa[j].b;
-	//		sum += aa[j].c;
-	//	}
-	//}
-
-	//end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Processing took: " << duration.count() * 1000 << " ms\n";
-	//std::cout << sum << '\n';
-	
+		AddData(e0, Rigidbody, 10, 1, 0.3, 0.1, 1);
 #if 0
 	for (int i = 0; i < 1000000; ++i)
 	{
@@ -245,38 +204,10 @@ void Application::MainLoop()
 	end = std::chrono::high_resolution_clock::now(); duration = end - start; std::cout << "Processing took: " << duration.count() << " ms\n";
 	std::cout << sum;
 #endif
-	//std::random_device device;
-	//std::mt19937 mt(device());
-	//std::uniform_int_distribution<int> dist(-1000, 1000);
-	//std::ios::sync_with_stdio(false);
-	//int is = 1000;
-	//for (int i = 0; i < is; ++i)
-	//{
-	//	EntityID e = ecs.CreateEnitity();
-	//	ecs.Add<A>(e, dist(mt), dist(mt), dist(mt));
-	//	ecs.Add<B>(e, dist(mt));
-	//	ecs.Add<C>(e, dist(mt));
-	//	ecs.Add<D>(e, dist(mt));
-	//}
-	//Archetype* arch = ecs.QueryExact<A, B, C, D>();
-	//A* aa = arch->table[0].Get<A>(0);
-	//B* bb = arch->table[1].Get<B>(0);
-	//C* cc = arch->table[2].Get<C>(0);
-	//D* dd = arch->table[3].Get<D>(0);
-	//auto start = std::chrono::high_resolution_clock::now();
-	//int sum = 0;
-	//for (int e = 0; e < is; ++e)
-	//{
-	//	sum += aa[e].a;
-	//	sum *= bb[e].x;
-	//	sum += cc[e].x;
-	//	sum *= dd[e].x;
-	//}
-	//auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration<double> duration = end - start; std::cout << "Processing took: " << duration.count() * 1000 << " ms\n";
-	//std::cout << sum;
+
 	// Camera code
 	Vector2 camera;
-	std::ios::sync_with_stdio(false);
+	float zoomScale = 1;
 	Uint32 lastUpdate = SDL_GetTicks();
 	Uint32 currentUpdate = 0;
 	
@@ -289,6 +220,19 @@ void Application::MainLoop()
 			{
 				quit = true;
 				break;
+			}
+			else if (e.type == SDL_KEYDOWN && e.key.repeat > 0)
+			{
+				if (e.key.keysym.sym == SDLK_p)
+				{
+					zoomScale += 0.01;
+					SDL_RenderSetScale(renderer, zoomScale, zoomScale);
+				}
+				else if (e.key.keysym.sym == SDLK_o)
+				{
+					zoomScale -= 0.01;
+					SDL_RenderSetScale(renderer, zoomScale, zoomScale);
+				}
 			}
 			else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
 			{
@@ -348,20 +292,18 @@ void Application::MainLoop()
 		currentUpdate = SDL_GetTicks();
 		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001;
-
+		//deltaTime *= 5;
 		physics.UpdateTransform(deltaTime);
 		physics.UpdateColliders();
 		physics.FindSolveCollisions();
-		//collisionSystem.Update();
-		//collisionSystem.SolveCollisions();
 
 		// Camera updating
 		//camera.x = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
 		//camera.y = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
-		camera.x = (GetData(e1, Transform)->pos.x - window.w / 2);
-		camera.y = (GetData(e1, Transform)->pos.y - window.h / 2);
+		camera.x = GetData(e1, Transform)->pos.x - (window.w / 2) / zoomScale;
+		camera.y = GetData(e1, Transform)->pos.y - (window.h / 2) / zoomScale;
 
-		std::cout << GetData(e1, Transform)->pos.x << " " << GetData(e1, Transform)->pos.y << '\n';
+		//std::cout << GetData(e1, Kinematics)->vel.x << " " << GetData(e1, Kinematics)->vel.y << '\n';
 		//camera = { 0,0 };
 
 		RenderSystem::Render(camera);

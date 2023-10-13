@@ -13,7 +13,22 @@ void Physics::UpdateTransform(double deltaTime)
 		{
 			Kinematics& kinematic = kinematics[i];
 
-			kinematic.vel += kinematic.acc * deltaTime;
+			// Calculate forces
+			Vector2 force;
+
+			Rigidbody* rb = GetColumn(arch, Rigidbody);
+			force.x += (kinematic.vel.x * kinematic.vel.x * rb->linearDrag);
+			force.y += (kinematic.vel.y * kinematic.vel.y * rb->linearDrag);
+
+			// Check if the force should reverse direction based on velocity
+			if (force.x > 0 && kinematic.vel.x > 0)
+				force.x = -force.x;
+			if (force.y > 0 && kinematic.vel.y > 0)
+				force.y = -force.y;
+
+			std::cout << force.x << ' ' << force.y << '\n';
+
+			kinematic.vel += (kinematic.acc + force/rb->mass) * deltaTime;
 			transforms[i].pos += kinematic.vel * deltaTime;
 		}
 	}

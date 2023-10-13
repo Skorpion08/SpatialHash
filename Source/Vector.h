@@ -33,6 +33,10 @@ struct Vector2
 	{
 		return sqrtf(x * x + y * y);
 	}
+	inline float GetMagnitudeSquared() const
+	{
+		return x * x + y * y;
+	}
 
 	inline Vector2 operator -()
 	{

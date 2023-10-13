@@ -45,6 +45,8 @@ struct Rigidbody
 
 	float staticFriction = 0.5;
 	float dynamicFriction = 0.3;
+
+	float linearDrag = 0.1;
 };
 
 struct Gravity
