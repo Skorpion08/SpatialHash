@@ -10,7 +10,7 @@
 Application::Application()
 {
 	window.w = 1000;
-	window.h = 700;
+	window.h = 1000;
 }
 
 Application::~Application()
@@ -82,7 +82,7 @@ void Application::MainLoop()
 
 	SDL_Event e;
 
-	float v = 200.0f;
+	float v = 1000;
 
 	float ad = 1000.0f;
 
@@ -113,22 +113,56 @@ void Application::MainLoop()
 	std::mt19937 mt(device());
 	std::uniform_int_distribution<int> dist(-100, 100);
 
-	COMPONENT(A);
-	COMPONENT(B);
-	TAG(Enemy);
-	EntityID e0 = ECS::NewEnitity();
+	EntityID ceiling = ECS::NewEnitity();
+	AddData(ceiling, Transform, Vector2(0, 0));
+	AddData(ceiling, Kinematics);
+	AddData(ceiling, Sprite, 1000, 100, nullptr, textureManager.Load("resources/square.png"));
+	AddData(ceiling, Collision, new OBB(1000, 100));
+	AddData(ceiling, Rigidbody, 10000000);
+
+	EntityID floor = ECS::NewEnitity();
+	AddData(floor, Transform, Vector2(0, 1000));
+	AddData(floor, Kinematics);
+	AddData(floor, Sprite, 1000, 100, nullptr, textureManager.Load("resources/square.png"));
+	AddData(floor, Collision, new OBB(1000, 100));
+	AddData(floor, Rigidbody, 10000000);
+
+	EntityID lwall = ECS::NewEnitity();
+	AddData(lwall, Transform, Vector2(-100, 0));
+	AddData(lwall, Kinematics);
+	AddData(lwall, Sprite, 100, 10000, nullptr, textureManager.Load("resources/square.png"));
+	AddData(lwall, Collision, new OBB(100, 10000));
+	AddData(lwall, Rigidbody, 10000000);
+
+	EntityID rwall = ECS::NewEnitity();
+	AddData(rwall, Transform, Vector2(100, 0));
+	AddData(rwall, Kinematics);
+	AddData(rwall, Sprite, 100, 10000, nullptr, textureManager.Load("resources/square.png"));
+	AddData(rwall, Collision, new OBB(100, 10000));
+	AddData(rwall, Rigidbody, 10000000);
+
 	EntityID e1 = ECS::NewEnitity();
 	//EntityID e2 = ECS::NewEnitity();
 
 	AddData(e1, Transform);
 	AddData(e1, Kinematics);
 	AddData(e1, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
-	AddData(e1, Collision, new AABB(100, 100));
+	AddData(e1, Collision, new OBB(100, 100));
+	AddData(e1, Rigidbody, 10);
+	for (int i = 0; i < 1; ++i)
+	{
 
-	AddData(e0, Transform);
-	AddData(e0, Kinematics);
-	AddData(e0, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
-	AddData(e0, Collision, new AABB(100, 100));
+		EntityID e0 = ECS::NewEnitity();
+
+
+		AddData(e0, Transform, Vector2(200*i+50, 100*i+50));
+		AddData(e0, Kinematics, Vector2(), Vector2(-10*i, -2*i));
+		AddData(e0, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
+		AddData(e0, Collision, new OBB(100, 100));
+		AddData(e0, Rigidbody, 100);
+	}
+
+
 	////AddTag(e1, Enemy);
 	//ECS::Get<A>(e1);
 	//AddData(e1, A, 0, 0, 0);
@@ -260,22 +294,22 @@ void Application::MainLoop()
 			{
 				if (e.key.keysym.sym == SDLK_LEFT)
 				{
-					GetData(e1, Kinematics)->vel.x -= v;
+					GetData(e1, Kinematics)->acc.x -= v;
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_RIGHT)
 				{
-					GetData(e1, Kinematics)->vel.x += v;
+					GetData(e1, Kinematics)->acc.x += v;
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_UP)
 				{
-					GetData(e1, Kinematics)->vel.y -= v;
+					GetData(e1, Kinematics)->acc.y -= v;
 					keyPressed = true;
 				}
 				else if (e.key.keysym.sym == SDLK_DOWN)
 				{
-					GetData(e1, Kinematics)->vel.y += v;
+					GetData(e1, Kinematics)->acc.y += v;
 					keyPressed = true;
 				}
 			}
@@ -283,22 +317,22 @@ void Application::MainLoop()
 			{
 				if (e.key.keysym.sym == SDLK_LEFT)
 				{
-					GetData(e1, Kinematics)->vel.x -= -v;
+					GetData(e1, Kinematics)->acc.x -= -v;
 					keyPressed = false;
 				}
 				else if (e.key.keysym.sym == SDLK_RIGHT)
 				{
-					GetData(e1, Kinematics)->vel.x += -v;
+					GetData(e1, Kinematics)->acc.x += -v;
 					keyPressed = false;
 				}
 				else if (e.key.keysym.sym == SDLK_UP)
 				{
-					GetData(e1, Kinematics)->vel.y -= -v;
+					GetData(e1, Kinematics)->acc.y -= -v;
 					keyPressed = false;
 				}
 				else if (e.key.keysym.sym == SDLK_DOWN)
 				{
-					GetData(e1, Kinematics)->vel.y += -v;
+					GetData(e1, Kinematics)->acc.y += -v;
 					keyPressed = false;
 				}
 			}
@@ -322,10 +356,13 @@ void Application::MainLoop()
 		//collisionSystem.SolveCollisions();
 
 		// Camera updating
-		// camera.x = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
-		// camera.y = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
-		camera.x = 0;
-		camera.y = 0;
+		//camera.x = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
+		//camera.y = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
+		camera.x = (GetData(e1, Transform)->pos.x - window.w / 2);
+		camera.y = (GetData(e1, Transform)->pos.y - window.h / 2);
+
+		std::cout << GetData(e1, Transform)->pos.x << " " << GetData(e1, Transform)->pos.y << '\n';
+		//camera = { 0,0 };
 
 		RenderSystem::Render(camera);
 

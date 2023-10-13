@@ -7,12 +7,14 @@ void Physics::UpdateTransform(double deltaTime)
 	for (int k = 0; k < query.size(); ++k)
 	{
 		Archetype* arch = query[k];
-		Transform* transforms = static_cast<Column<Transform>*>(arch->columns[arch->type.FindIndexFor(getID(Transform))])->Get(0);
-		Kinematics* kinematics = static_cast<Column<Kinematics>*>(arch->columns[arch->type.FindIndexFor(getID(Kinematics))])->Get(0);
+		Transform* transforms = GetColumn(arch, Transform);
+		Kinematics* kinematics = GetColumn(arch, Kinematics);
 		for (int i = 0; i < arch->entityCount; ++i)
 		{
-			kinematics[i].vel += kinematics[i].acc * deltaTime;
-			transforms[i].pos += kinematics[i].vel * deltaTime;
+			Kinematics& kinematic = kinematics[i];
+
+			kinematic.vel += kinematic.acc * deltaTime;
+			transforms[i].pos += kinematic.vel * deltaTime;
 		}
 	}
 }
@@ -24,14 +26,16 @@ void Physics::UpdateColliders()
 	for (int k = 0; k < query.size(); ++k)
 	{
 		Archetype* arch = query[k];
-		Transform* transforms = static_cast<Column<Transform>*>(arch->columns[arch->type.FindIndexFor(getID(Transform))])->Get(0);
-		Collision* collisionComps = static_cast<Column<Collision>*>(arch->columns[arch->type.FindIndexFor(getID(Collision))])->Get(0);
+		Transform* transforms = GetColumn(arch, Transform);
+		Collision* collisionComps = GetColumn(arch, Collision);
 		for (int i = 0; i < arch->entityCount; ++i)
 		{
-			collisionComps[i].collider->MoveBy(transforms[i].pos - collisionComps[i].collider->center);
+			Shape2D* collider = collisionComps[i].collider.get();
+
+			collider->MoveBy(transforms[i].pos - collider->center);
 
 			// update the side vectors to make collision work
-			collisionComps[i].collider->UpdateSideVectors();
+			collider->UpdateSideVectors();
 		}
 	}
 }
@@ -184,7 +188,9 @@ void Physics::FindSolveCollisions()
 	for (int k = 0; k < query.size(); ++k)
 	{
 		Archetype* arch1 = query[k];
-		Collision* collisionComps1 = static_cast<Column<Collision>*>(arch1->columns[arch1->type.FindIndexFor(getID(Collision))])->Get(0);
+		Collision* collisionComps1 = GetColumn(arch1, Collision);
+
+		Rigidbody* rigidbodies1 = GetColumn(arch1, Rigidbody);
 
 		for (int i = 0; i < arch1->entityCount; ++i)
 		{
@@ -192,13 +198,16 @@ void Physics::FindSolveCollisions()
 			for (int l = 0; l < query.size(); ++l)
 			{
 				Archetype* arch2 = query[l];
-				Collision* collisionComps2 = static_cast<Column<Collision>*>(arch2->columns[arch2->type.FindIndexFor(getID(Collision))])->Get(0);
+				Collision* collisionComps2 = GetColumn(arch2, Collision);
+
+				Rigidbody* rigidbodies2 = GetColumn(arch2, Rigidbody);
+
 				for (int j = 0; j < arch2->entityCount; ++j)
 				{
-					if (arch1->id_table[i] == arch1->id_table[j])
+					if (arch1->id_table[i] == arch2->id_table[j])
 						continue;
 
-					Collision& collisionComp2 = collisionComps1[j];
+					Collision& collisionComp2 = collisionComps2[j];
 
 					CollisionMethod method1 = collisionComp1.collider->GetCollisionMethod();
 					CollisionMethod method2 = collisionComp2.collider->GetCollisionMethod();
@@ -214,8 +223,120 @@ void Physics::FindSolveCollisions()
 						info = POLYtoPOLY(*collisionComp1.collider, *collisionComp2.collider);
 					}
 
-					//std::cout << "Colliding = " << (info.overlap ? "true\n" : "false\n");
+					if (info.overlap && collisionComp1.blockCollision && collisionComp2.blockCollision) // We can solve the collision
+					{
+						Vector2 displacement1;
+						Vector2 displacement2;
 
+						if (arch1->type.FindIndexFor(getID(Transform)) != -1 && arch1->type.FindIndexFor(getID(Transform)) != -1)
+						{
+							Transform* transforms1 = GetColumn(arch1, Transform);
+							//Transform* transforms1 = static_cast<Column<Transform>*>(arch1->columns[arch1->type.FindIndexFor(getID(Transform))])->Get(0);
+							Transform* transforms2 = GetColumn(arch2, Transform);;
+
+							float massRatio1 = 0.5;
+							float massRatio2 = 0.5;
+
+							// Some optional scaling factor for weights
+							if (rigidbodies1 || rigidbodies2)
+							{
+								float mass1 = 0;
+								float mass2 = 0;
+
+								if (rigidbodies1)
+									mass1 = rigidbodies1[i].mass;
+
+								if (rigidbodies2)
+									mass2 = rigidbodies2[j].mass;
+
+								float totalMass = mass1 + mass2;
+
+								massRatio1 = mass1 / totalMass;
+								massRatio2 = mass2 / totalMass;
+							}
+
+							displacement1 += info.mtv * massRatio1;
+							displacement2 -= info.mtv * massRatio2;
+
+
+							transforms1[i].pos += displacement1;
+							collisionComp1.collider->MoveBy(displacement1);
+
+							transforms2[j].pos += displacement2;
+							collisionComp2.collider->MoveBy(displacement2);
+						}
+						if (info.overlap && (rigidbodies1 || rigidbodies2))
+						{
+							if (info.mtv.x == 0 && info.mtv.y == 0)
+								continue;
+
+							Rigidbody* rb1 = &rigidbodies1[i];
+							Rigidbody* rb2 = &rigidbodies2[j];
+
+							Kinematics* kinematics1 = GetColumn(arch1, Kinematics);
+							Kinematics* kinematics2 = GetColumn(arch2, Kinematics);
+								// We need to calculate the velocity at the time of collision and not at the time of overlaps
+
+							Vector2 relativeVelVector = kinematics2[j].vel - kinematics1[i].vel;
+							Vector2 normal = Vector::GetNormalized(info.mtv);
+							//Vector2 normal = Vector::GetNormalized(info.mtv);
+
+							float relativeVel = Vector::DotProduct(relativeVelVector, normal);
+
+							if (relativeVel > 0)
+							{
+								//printf("relative vel: %f\n", relativeVel);
+								float invMass1, invMass2;
+								if (rb1)
+									invMass1 = 1.0 / rb1->mass;
+								else
+									invMass1 = 0;
+
+								if (rb2)
+									invMass2 = 1.0 / rb2->mass;
+								else
+									invMass2 = 0;
+
+								// Calculate impulse
+								float impulseScalar = -(1 + (rb1->elasticity + rb2->elasticity) / 2) *
+									relativeVel /
+									(invMass1 + invMass2);
+								Vector2 impulse = normal * impulseScalar;
+
+								// Apply impulse to kinematics
+								kinematics1[i].vel -= impulse * invMass1;
+								kinematics2[j].vel += impulse * invMass2;
+
+								relativeVelVector = kinematics2[j].vel - kinematics1[i].vel;
+
+								relativeVel = Vector::DotProduct(relativeVelVector, normal);
+
+								// Apply friction
+								float sf = (rb1->staticFriction + rb2->staticFriction) / 2;
+								float df = (rb1->dynamicFriction + rb2->dynamicFriction) / 2;
+
+								Vector2 tangent = Vector::GetNormalized(relativeVelVector - (normal * relativeVel));
+								float frictionScalar = -Vector::DotProduct(relativeVelVector, tangent) / (invMass1 + invMass2);
+
+								Vector2 frictionImpulse = frictionScalar * tangent;
+
+
+
+								if (abs(frictionScalar) < abs(impulseScalar) * sf)
+								{
+									frictionImpulse = frictionScalar * tangent;
+								}
+								else
+								{
+									frictionImpulse = impulseScalar * tangent * df;
+								}
+
+								// Apply friction impulse to kinematics
+								kinematics1[i].vel -= frictionImpulse * invMass1;
+								kinematics2[j].vel += frictionImpulse * invMass2;
+							}
+						}
+					}
 				}
 			}
 		}

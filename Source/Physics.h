@@ -29,8 +29,7 @@ struct Kinematics
 
 struct Friction
 {
-	float staticFriction;
-	float dynamicFriction;
+
 };
 
 struct AngularKinematics
@@ -40,7 +39,12 @@ struct AngularKinematics
 
 struct Rigidbody
 {
-	float mass;
+	float mass = 10;
+
+	float elasticity = 1;
+
+	float staticFriction = 0.5;
+	float dynamicFriction = 0.3;
 };
 
 struct Gravity

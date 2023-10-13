@@ -108,7 +108,7 @@ void Column<T>::Destroy(size_t index)
 template<typename T>
 T* Column<T>::Get(size_t index)
 {
-	if (index >= m_count) throw std::out_of_range("Column index out of range!");
+	if (index >= m_count) return nullptr;
 
 	return &elements[index];
 }
