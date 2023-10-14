@@ -17,8 +17,9 @@ void Physics::UpdateTransform(double deltaTime)
 			Vector2 force;
 
 			Rigidbody* rb = GetColumn(arch, Rigidbody);
-			force.x += (kinematic.vel.x * kinematic.vel.x * rb->linearDrag);
-			force.y += (kinematic.vel.y * kinematic.vel.y * rb->linearDrag);
+			force.x += (kinematic.vel.x * kinematic.vel.x * rb[i].linearDrag) / 100;
+			force.y += (kinematic.vel.y * kinematic.vel.y * rb[i].linearDrag) / 100;
+
 
 			// Check if the force should reverse direction based on velocity
 			if (force.x > 0 && kinematic.vel.x > 0)
@@ -26,9 +27,7 @@ void Physics::UpdateTransform(double deltaTime)
 			if (force.y > 0 && kinematic.vel.y > 0)
 				force.y = -force.y;
 
-			std::cout << force.x << ' ' << force.y << '\n';
-
-			kinematic.vel += (kinematic.acc + force/rb->mass) * deltaTime;
+			kinematic.vel += (kinematic.acc + force/ rb[i].mass) * deltaTime;
 			transforms[i].pos += kinematic.vel * deltaTime;
 		}
 	}
