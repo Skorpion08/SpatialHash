@@ -13,21 +13,28 @@ void Physics::UpdateTransform(double deltaTime)
 		{
 			Kinematics& kinematic = kinematics[i];
 
-			// Calculate forces
-			Vector2 force;
-
 			Rigidbody* rb = GetColumn(arch, Rigidbody);
-			force.x += (kinematic.vel.x * kinematic.vel.x * rb[i].linearDrag) / 100;
-			force.y += (kinematic.vel.y * kinematic.vel.y * rb[i].linearDrag) / 100;
+			if (rb)
+			{
+				// Calculate forces
+				Vector2 force;
 
+				force.x += (kinematic.vel.x * kinematic.vel.x * rb[i].linearDrag) / 100;
+				force.y += (kinematic.vel.y * kinematic.vel.y * rb[i].linearDrag) / 100;
 
-			// Check if the force should reverse direction based on velocity
-			if (force.x > 0 && kinematic.vel.x > 0)
-				force.x = -force.x;
-			if (force.y > 0 && kinematic.vel.y > 0)
-				force.y = -force.y;
+				// Check if the force should reverse direction based on velocity
+				if (force.x > 0 && kinematic.vel.x > 0)
+					force.x = -force.x;
+				if (force.y > 0 && kinematic.vel.y > 0)
+					force.y = -force.y;
 
-			kinematic.vel += (kinematic.acc + force/ rb[i].mass) * deltaTime;
+				kinematic.vel += (kinematic.acc + force / rb[i].mass) * deltaTime;
+			}
+			else // If we don't need force calculations we can simply update velocity
+			{
+				kinematic.vel += kinematic.acc * deltaTime;
+			}
+			
 			transforms[i].pos += kinematic.vel * deltaTime;
 		}
 	}
@@ -119,7 +126,8 @@ CollisionInfo Physics::POLYtoPOLY(Shape2D& shapeA, Shape2D& shapeB)
 	auto& sidesB = shapeB.sides;
 
 	// We use the normals as our axes for checking
-	std::vector<Vector2> axes;
+	static std::vector<Vector2> axes;
+	axes.clear();
 	axes.reserve(sidesA.size() + sidesB.size());
 
 	for (size_t i = 0; i < sidesA.size(); ++i)
@@ -203,8 +211,8 @@ void Physics::FindSolveCollisions()
 	{
 		Archetype* arch1 = query[k];
 		Collision* collisionComps1 = GetColumn(arch1, Collision);
-
 		Rigidbody* rigidbodies1 = GetColumn(arch1, Rigidbody);
+		Kinematics* kinematics1 = GetColumn(arch1, Kinematics);
 
 		for (int i = 0; i < arch1->entityCount; ++i)
 		{
@@ -213,8 +221,9 @@ void Physics::FindSolveCollisions()
 			{
 				Archetype* arch2 = query[l];
 				Collision* collisionComps2 = GetColumn(arch2, Collision);
-
 				Rigidbody* rigidbodies2 = GetColumn(arch2, Rigidbody);
+
+				Kinematics* kinematics2 = GetColumn(arch2, Kinematics);
 
 				for (int j = 0; j < arch2->entityCount; ++j)
 				{
@@ -242,7 +251,7 @@ void Physics::FindSolveCollisions()
 						Vector2 displacement1;
 						Vector2 displacement2;
 
-						if (arch1->type.FindIndexFor(getID(Transform)) != -1 && arch1->type.FindIndexFor(getID(Transform)) != -1)
+						if (arch1->type.FindIndexFor(getID(Transform)) != -1 && arch1->type.FindIndexFor(getID(Transform)) != -1 && (kinematics1 || kinematics2))
 						{
 							Transform* transforms1 = GetColumn(arch1, Transform);
 							//Transform* transforms1 = static_cast<Column<Transform>*>(arch1->columns[arch1->type.FindIndexFor(getID(Transform))])->Get(0);
@@ -284,16 +293,31 @@ void Physics::FindSolveCollisions()
 							if (info.mtv.x == 0 && info.mtv.y == 0)
 								continue;
 
-							Rigidbody* rb1 = &rigidbodies1[i];
-							Rigidbody* rb2 = &rigidbodies2[j];
+							Rigidbody* rb1 = nullptr;
+							Rigidbody* rb2 = nullptr;
 
-							Kinematics* kinematics1 = GetColumn(arch1, Kinematics);
-							Kinematics* kinematics2 = GetColumn(arch2, Kinematics);
-								// We need to calculate the velocity at the time of collision and not at the time of overlaps
+							// We can PROBABLY optimize this check to be done at the archetype check than in every inside loop
+							if (rigidbodies1)
+								rb1 = &rigidbodies1[i];
+							if (rigidbodies2)
+								rb2 = &rigidbodies2[j];
+							if (!rigidbodies1)
+								rb1 = rb2;
+							else
+								rb2 = rb1;
 
-							Vector2 relativeVelVector = kinematics2[j].vel - kinematics1[i].vel;
+							Vector2 vel1;
+							Vector2 vel2;
+
+							if (kinematics1)
+								vel1 = kinematics1[i].vel;
+							if (kinematics2)
+								vel2 = kinematics2[j].vel;
+
+							// We need to calculate the velocity at the time of collision and not at the time of overlaps
+
+							Vector2 relativeVelVector = vel2 - vel1;
 							Vector2 normal = Vector::GetNormalized(info.mtv);
-							//Vector2 normal = Vector::GetNormalized(info.mtv);
 
 							float relativeVel = Vector::DotProduct(relativeVelVector, normal);
 
@@ -301,12 +325,12 @@ void Physics::FindSolveCollisions()
 							{
 								//printf("relative vel: %f\n", relativeVel);
 								float invMass1, invMass2;
-								if (rb1)
+								if (rigidbodies1)
 									invMass1 = 1.0 / rb1->mass;
 								else
 									invMass1 = 0;
 
-								if (rb2)
+								if (rigidbodies2)
 									invMass2 = 1.0 / rb2->mass;
 								else
 									invMass2 = 0;
@@ -318,10 +342,16 @@ void Physics::FindSolveCollisions()
 								Vector2 impulse = normal * impulseScalar;
 
 								// Apply impulse to kinematics
-								kinematics1[i].vel -= impulse * invMass1;
-								kinematics2[j].vel += impulse * invMass2;
+								if (kinematics1) kinematics1[i].vel -= impulse * invMass1;
+								if (kinematics2) kinematics2[j].vel += impulse * invMass2;
 
-								relativeVelVector = kinematics2[j].vel - kinematics1[i].vel;
+								// Use the new velocity
+								if (kinematics1)
+									vel1 = kinematics1[i].vel;
+								if (kinematics2)
+									vel2 = kinematics2[j].vel;
+
+								relativeVelVector = vel2 - vel1;
 
 								relativeVel = Vector::DotProduct(relativeVelVector, normal);
 
@@ -346,8 +376,8 @@ void Physics::FindSolveCollisions()
 								}
 
 								// Apply friction impulse to kinematics
-								kinematics1[i].vel -= frictionImpulse * invMass1;
-								kinematics2[j].vel += frictionImpulse * invMass2;
+								if (kinematics1) kinematics1[i].vel -= frictionImpulse * invMass1;
+								if (kinematics2) kinematics2[j].vel += frictionImpulse * invMass2;
 							}
 						}
 					}

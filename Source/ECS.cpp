@@ -231,3 +231,19 @@ ID ECS::InitComponent(const char* name, uint32_t size)
 	record.row = arch->entityCount++;
 	return component;
 }
+
+Archetype::~Archetype()
+{
+	for (int i = 0; i < columns.size(); ++i)
+		delete columns[i];
+}
+
+void* Archetype::GetColumnPtr(ID id)
+{
+	auto index = this->type.FindIndexFor(id);
+	if (index != -1)
+	{
+		return this->columns[index]->GetAddress(0);
+	}
+	return nullptr;
+}

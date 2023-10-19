@@ -114,32 +114,25 @@ void Application::MainLoop()
 	std::uniform_int_distribution<int> dist(-100, 100);
 
 	EntityID ceiling = ECS::NewEnitity();
-	AddData(ceiling, Transform, Vector2(0, 0));
-	AddData(ceiling, Kinematics);
+	AddData(ceiling, Transform, Vector2(0, -5000));
 	AddData(ceiling, Sprite, 1000, 100, nullptr, textureManager.Load("resources/square.png"));
 	AddData(ceiling, Collision, new OBB(1000, 100));
-	AddData(ceiling, Rigidbody, 10000000);
 
 	EntityID floor = ECS::NewEnitity();
-	AddData(floor, Transform, Vector2(0, 5000));
-	AddData(floor, Kinematics);
+	AddData(floor, Transform, Vector2(0, 4950));
 	AddData(floor, Sprite, 1000, 100, nullptr, textureManager.Load("resources/square.png"));
 	AddData(floor, Collision, new OBB(1000, 100));
-	AddData(floor, Rigidbody, 10000000);
 
 	EntityID lwall = ECS::NewEnitity();
-	AddData(lwall, Transform, Vector2(-100, 0));
-	AddData(lwall, Kinematics);
+	AddData(lwall, Transform, Vector2(-500, 0));
 	AddData(lwall, Sprite, 100, 10000, nullptr, textureManager.Load("resources/square.png"));
 	AddData(lwall, Collision, new OBB(100, 10000));
-	AddData(lwall, Rigidbody, 10000000);
 
 	EntityID rwall = ECS::NewEnitity();
-	AddData(rwall, Transform, Vector2(100, 0));
-	AddData(rwall, Kinematics);
+	AddData(rwall, Transform, Vector2(500, 0));
 	AddData(rwall, Sprite, 100, 10000, nullptr, textureManager.Load("resources/square.png"));
 	AddData(rwall, Collision, new OBB(100, 10000));
-	AddData(rwall, Rigidbody, 10000000);
+	//AddData(rwall, Rigidbody, 10000000);
 
 	EntityID e1 = ECS::NewEnitity();
 	//EntityID e2 = ECS::NewEnitity();
@@ -148,14 +141,21 @@ void Application::MainLoop()
 	AddData(e1, Kinematics);
 	AddData(e1, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
 	AddData(e1, Collision, new OBB(100, 100));
-	AddData(e1, Rigidbody, 10, 1, 0.4, 0.3, 0.1);
+	AddData(e1, Rigidbody, 10, 1, 0.4, 0.3, 0);
 
 	EntityID e0 = ECS::NewEnitity();
-	AddData(e0, Transform, Vector2(50, 50));
-	AddData(e0, Kinematics, Vector2(), Vector2(0,1000));
+	AddData(e0, Transform, Vector2(50, 0));
+	AddData(e0, Kinematics, Vector2(), Vector2(0,0));
 	AddData(e0, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
 	AddData(e0, Collision, new OBB(100, 100));
-	AddData(e0, Rigidbody, 15, 1, 0.3, 0.1, 0.1);
+	AddData(e0, Rigidbody, 10, 1, 0.3, 0.1, 0);
+
+	EntityID e3 = ECS::NewEnitity();
+	AddData(e3, Transform, Vector2(-100, 500));
+	AddData(e3, Kinematics);
+	AddData(e3, Sprite, 100, 100, nullptr, textureManager.Load("resources/square.png"));
+	AddData(e3, Collision, new OBB(100, 100));
+	AddData(e3, Rigidbody, 8, 1, 0.3, 0.1);
 #if 0
 	for (int i = 0; i < 1000000; ++i)
 	{
@@ -291,18 +291,19 @@ void Application::MainLoop()
 		currentUpdate = SDL_GetTicks();
 		// in seconds
 		deltaTime = (currentUpdate - lastUpdate) * 0.001;
+
 		//deltaTime *= 5;
 		physics.UpdateTransform(deltaTime);
+		GetData(e3, Transform)->pos.y += (200 * sin((SDL_GetTicks() / 10) * (PI / 180)))*deltaTime;
 		physics.UpdateColliders();
 		physics.FindSolveCollisions();
-
 		// Camera updating
 		//camera.x = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
 		//camera.y = (camera.Get<Transform>(camera.focusedEntity).x - window.w/2)  * zoomScale;
 		camera.x = GetData(e1, Transform)->pos.x - (window.w / 2) / zoomScale;
 		camera.y = GetData(e1, Transform)->pos.y - (window.h / 2) / zoomScale;
 
-		std::cout << GetData(e1, Kinematics)->vel.x << " " << GetData(e1, Kinematics)->vel.y << '\n';
+		std::cout << GetData(e3, Transform)->pos.x << " " << GetData(e3, Transform)->pos.y << '\n';
 		//camera = { 0,0 };
 
 		RenderSystem::Render(camera);
@@ -318,8 +319,6 @@ void Application::MainLoop()
 			}
 			SDL_RenderDrawLine(renderer, shape.vertices[i].x - camera.x, shape.vertices[i].y - camera.y, shape.vertices[i + 1].x - camera.x, shape.vertices[i + 1].y - camera.y);
 		}*/
-
-
 		//std::cout << (currentUpdate - lastUpdate) << " ms\n";
 		++frame;
 		if (SDL_GetTicks() % 1000 == 0 && frame > 5)

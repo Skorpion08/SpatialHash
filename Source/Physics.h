@@ -46,7 +46,7 @@ struct Rigidbody
 	float staticFriction = 0.5;
 	float dynamicFriction = 0.3;
 
-	float linearDrag = 0.1;
+	float linearDrag = 0.01;
 };
 
 struct Gravity
@@ -60,7 +60,7 @@ struct Collision
 	Collision() = default;
 	Collision(Shape2D* _collider, bool _blockCollision = true) : collider(_collider), blockCollision(_blockCollision) {}
 
-	std::shared_ptr<Shape2D> collider;
+	std::unique_ptr<Shape2D> collider;
 	bool blockCollision = true;
 };
 

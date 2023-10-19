@@ -1,4 +1,4 @@
 1. Prevent creating new entities copying the EntityRecord and then destroying the original (more speed, and we like sped)
 2. Simplify some code (for example the ECS::Add function it takes quite a chunk of space)
 3. Make a sparse set for Entity Records it will probably be faster
-4. Finish the port to NEW COLUMN
+4. Make code in physics make rb1 and rb2 point to the same shit if one of them doesnt have it

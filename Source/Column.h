@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Log.h"
+
 #include <vector>
 #include <stdexcept>
 
@@ -85,8 +87,7 @@ inline void Column<T>::MoveFrom(ColumnBase* other, size_t srcIndex)
 
 	this->PushBack(*column->Get(srcIndex));
 
-	column->elements[srcIndex] = column->elements[column->m_count - 1];
-	--column->m_count;
+	column->Destroy(column->m_count - 1);
 }
 
 template<typename T>
@@ -100,7 +101,7 @@ void Column<T>::Destroy(size_t index)
 	// If the index is the last one in the column we do not need to swap
 	if (index != m_count - 1)
 	{
-		elements[index] = elements[m_count - 1];
+		elements[index] = std::move(elements[m_count - 1]);
 	}
 	--m_count;
 }

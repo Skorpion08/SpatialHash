@@ -13,7 +13,6 @@
 #include "Log.h"
 //#include "EntityManager.h"
 
-
 class Application
 {
 public:

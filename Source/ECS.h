@@ -17,6 +17,8 @@ using Type = sorted_vector;
 
 struct Archetype
 {
+	virtual ~Archetype();
+
 	ArchetypeID id;
 	Type type;
 
@@ -28,6 +30,9 @@ struct Archetype
 
 	// Number of data entities attached to it
 	uint16_t dataCount = 0;
+
+	// Returns the pointer to the first element of id
+	void* GetColumnPtr(ID id);
 
 	bool Has(ID id) { return type.FindIndexFor(id) != -1; }
 };
@@ -79,6 +84,7 @@ namespace ECS
 	inline T* Get(EntityID entityID);
 
 	void* Get(EntityID entityID, ID id);
+
 
 	bool Has(EntityID entity, ID id);
 
@@ -213,7 +219,7 @@ inline Archetype* ECS::QueryExact()
 
 #define GetData(e, type) static_cast<type*>(ECS::Get(e, getID(type)))
 
-#define GetColumn(archetype, dataType) static_cast<Column<dataType>*>(archetype->columns[archetype->type.FindIndexFor(getID(dataType))])->Get(0)
+#define GetColumn(archetype, dataType) static_cast<dataType*>(archetype->GetColumnPtr(getID(dataType)))
 
 #define AddTag(e, name) ECS::Add(e, name)
 
