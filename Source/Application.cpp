@@ -303,7 +303,7 @@ void Application::MainLoop()
 		camera.x = GetData(e1, Transform)->pos.x - (window.w / 2) / zoomScale;
 		camera.y = GetData(e1, Transform)->pos.y - (window.h / 2) / zoomScale;
 
-		std::cout << GetData(e3, Transform)->pos.x << " " << GetData(e3, Transform)->pos.y << '\n';
+		//std::cout << GetData(e3, Transform)->pos.x << " " << GetData(e3, Transform)->pos.y << '\n';
 		//camera = { 0,0 };
 
 		RenderSystem::Render(camera);

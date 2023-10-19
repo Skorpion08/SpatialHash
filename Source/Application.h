@@ -11,7 +11,6 @@
 #include "TextureManager.h"
 #include "Rendering.h"
 #include "Log.h"
-//#include "EntityManager.h"
 
 class Application
 {

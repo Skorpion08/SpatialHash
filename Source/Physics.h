@@ -60,7 +60,8 @@ struct Collision
 	Collision() = default;
 	Collision(Shape2D* _collider, bool _blockCollision = true) : collider(_collider), blockCollision(_blockCollision) {}
 
-	std::unique_ptr<Shape2D> collider;
+	// change it to normal later we'll make a shape2d bank
+	std::shared_ptr<Shape2D> collider;
 	bool blockCollision = true;
 };
 
